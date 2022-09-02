@@ -24,8 +24,7 @@ COPY ./build/dist $CASSANDRA_HOME
 
 RUN chmod +x $CASSANDRA_HOME/bin/cassandra $CASSANDRA_HOME/bin/nodetool $CASSANDRA_HOME/bin/cqlsh \
  && chown -R cassandra:cassandra $CASSANDRA_CONF $CASSANDRA_DATA $CASSANDRA_LOGS \
- && chmod 777 $CASSANDRA_CONF $CASSANDRA_DATA $CASSANDRA_LOGS \
- && chmod -R a+rwX $CASSANDRA_CONF \
+ && chmod -R a+rwX $CASSANDRA_CONF $CASSANDRA_DATA $CASSANDRA_LOGS \
  && mv $CASSANDRA_HOME/conf/* $CASSANDRA_CONF \
  && rm -rf $CASSANDRA_HOME/conf \
  && ln -sT $CASSANDRA_CONF $CASSANDRA_HOME/conf \
