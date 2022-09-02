@@ -14,7 +14,7 @@ jobs:
           distribution: 'temurin'
           java-version: '11'
       - name: Build with Ant
-        run: ant -Duse.jdk11=true -noinput -buildfile build.xml artifacts
+        run: ant -Duse.jdk11=true -Drat.skip=true -noinput -buildfile build.xml artifacts
       - name: Docker Login
         uses: docker/login-action@v1.14.1
         with:
