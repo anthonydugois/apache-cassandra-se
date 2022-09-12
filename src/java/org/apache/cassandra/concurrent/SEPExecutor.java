@@ -19,6 +19,7 @@ package org.apache.cassandra.concurrent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
@@ -31,6 +32,7 @@ import org.apache.cassandra.utils.WithResources;
 import org.apache.cassandra.utils.concurrent.Future;
 import org.apache.cassandra.utils.MBeanWrapper;
 import org.apache.cassandra.utils.concurrent.Condition;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,9 +67,14 @@ public class SEPExecutor implements LocalAwareExecutorPlus, SEPExecutorMBean
     final Condition shutdown = newOneTimeCondition();
 
     // TODO: see if other queue implementations might improve throughput
-    protected final ConcurrentLinkedQueue<Runnable> tasks = new ConcurrentLinkedQueue<>();
+    protected final Queue<Runnable> tasks;
 
     SEPExecutor(SharedExecutorPool pool, int maximumPoolSize, MaximumPoolSizeListener maximumPoolSizeListener, String jmxPath, String name)
+    {
+        this(pool, maximumPoolSize, maximumPoolSizeListener, jmxPath, name, new ConcurrentLinkedQueue<>());
+    }
+
+    SEPExecutor(SharedExecutorPool pool, int maximumPoolSize, MaximumPoolSizeListener maximumPoolSizeListener, String jmxPath, String name, Queue<Runnable> tasks)
     {
         this.pool = pool;
         this.name = name;
@@ -76,6 +83,7 @@ public class SEPExecutor implements LocalAwareExecutorPlus, SEPExecutorMBean
         this.maximumPoolSizeListener = maximumPoolSizeListener;
         this.permits.set(combine(0, maximumPoolSize));
         this.metrics = new ThreadPoolMetrics(this, jmxPath, name).register();
+        this.tasks = tasks;
         MBeanWrapper.instance.registerMBean(this, mbeanName);
     }
 

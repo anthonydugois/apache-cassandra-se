@@ -20,6 +20,7 @@ package org.apache.cassandra.concurrent;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -42,7 +43,7 @@ import static org.apache.cassandra.concurrent.ExecutorFactory.Global.executorFac
 
 public enum Stage
 {
-    READ              (false, "ReadStage",             "request",  DatabaseDescriptor::getConcurrentReaders,        DatabaseDescriptor::setConcurrentReaders,        Stage::multiThreadedLowSignalStage),
+    READ              (false, "ReadStage",             "request",  DatabaseDescriptor::getConcurrentReaders,        DatabaseDescriptor::setConcurrentReaders,        Stage::multiThreadedLowSignalReadStage),
     MUTATION          (true,  "MutationStage",         "request",  DatabaseDescriptor::getConcurrentWriters,        DatabaseDescriptor::setConcurrentWriters,        Stage::multiThreadedLowSignalStage),
     COUNTER_MUTATION  (true,  "CounterMutationStage",  "request",  DatabaseDescriptor::getConcurrentCounterWriters, DatabaseDescriptor::setConcurrentCounterWriters, Stage::multiThreadedLowSignalStage),
     VIEW_MUTATION     (true,  "ViewMutationStage",     "request",  DatabaseDescriptor::getConcurrentViewWriters,    DatabaseDescriptor::setConcurrentViewWriters,    Stage::multiThreadedLowSignalStage),
@@ -226,6 +227,22 @@ public enum Stage
                 .localAware()
                 .withJmx(jmxType)
                 .shared(jmxName, numThreads, onSetMaximumPoolSize);
+    }
+
+    static LocalAwareExecutorPlus multiThreadedLowSignalReadStage(String jmxName, String jmxType, int numThreads, LocalAwareExecutorPlus.MaximumPoolSizeListener onSetMaximumPoolSize)
+    {
+        Queue<Runnable> queue = DatabaseDescriptor.getReadQueue();
+
+        if (queue == null)
+        {
+            // Fallback to standard low signal stage if no custom read queue is available
+            return multiThreadedLowSignalStage(jmxName, jmxType, numThreads, onSetMaximumPoolSize);
+        }
+
+        return executorFactory()
+               .localAware()
+               .withJmx(jmxType)
+               .shared(jmxName, numThreads, onSetMaximumPoolSize, queue);
     }
 
     static LocalAwareExecutorPlus immediateExecutor(String jmxName, String jmxType, int numThreads, LocalAwareExecutorPlus.MaximumPoolSizeListener onSetMaximumPoolSize)

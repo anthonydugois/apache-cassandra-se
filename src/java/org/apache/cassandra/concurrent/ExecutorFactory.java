@@ -18,6 +18,8 @@
 
 package org.apache.cassandra.concurrent;
 
+import java.util.Queue;
+
 import org.apache.cassandra.concurrent.InfiniteLoopExecutor.Daemon;
 import org.apache.cassandra.concurrent.InfiniteLoopExecutor.Interrupts;
 import org.apache.cassandra.concurrent.InfiniteLoopExecutor.SimulatorSafe;
@@ -65,6 +67,10 @@ public interface ExecutorFactory extends ExecutorBuilderFactory.Jmxable<Executor
     public interface LocalAwareSubFactoryWithJMX extends ExecutorBuilderFactory<LocalAwareExecutorPlus, LocalAwareSequentialExecutorPlus>
     {
         LocalAwareExecutorPlus shared(String name, int threads, ExecutorPlus.MaximumPoolSizeListener onSetMaxSize);
+
+        default LocalAwareExecutorPlus shared(String name, int threads, ExecutorPlus.MaximumPoolSizeListener onSetMaxSize, Queue<Runnable> queue) {
+            return shared(name, threads, onSetMaxSize);
+        }
     }
 
     public interface LocalAwareSubFactory extends ExecutorBuilderFactory<LocalAwareExecutorPlus, LocalAwareSequentialExecutorPlus>
@@ -244,6 +250,11 @@ public interface ExecutorFactory extends ExecutorBuilderFactory.Jmxable<Executor
                         public LocalAwareExecutorPlus shared(String name, int threads, ExecutorPlus.MaximumPoolSizeListener onSetMaxSize)
                         {
                             return SharedExecutorPool.SHARED.newExecutor(threads, onSetMaxSize, jmxPath, name);
+                        }
+
+                        public LocalAwareExecutorPlus shared(String name, int threads, ExecutorPlus.MaximumPoolSizeListener onSetMaxSize, Queue<Runnable> queue)
+                        {
+                            return SharedExecutorPool.SHARED.newExecutor(threads, onSetMaxSize, jmxPath, name, queue);
                         }
                     };
                 }

@@ -199,7 +199,7 @@ public class DatabaseDescriptor
     /* === Apache Cassandra: Scheduling Edition === */
     /* ============================================ */
 
-    private static IReadQueue<?> readQueue;
+    private static IReadQueue readQueue;
 
     public static void daemonInitialization() throws ConfigurationException
     {
@@ -1424,7 +1424,7 @@ public class DatabaseDescriptor
         }
     }
 
-    public static IReadQueue<?> createAdvancedReadQueue(ParameterizedClass queue) throws ConfigurationException
+    public static IReadQueue createAdvancedReadQueue(ParameterizedClass queue) throws ConfigurationException
     {
         try
         {
@@ -1437,7 +1437,7 @@ public class DatabaseDescriptor
                 queueParameters = new HashMap<>(); // avoid null pointer
             }
 
-            return (IReadQueue<?>) queueConstructor.newInstance(queueParameters);
+            return (IReadQueue) queueConstructor.newInstance(queueParameters);
         }
         catch (ClassNotFoundException |
                NoSuchMethodException |
@@ -1731,6 +1731,11 @@ public class DatabaseDescriptor
     public static void setEndpointSnitch(IEndpointSnitch eps)
     {
         snitch = eps;
+    }
+
+    public static IReadQueue getReadQueue()
+    {
+        return readQueue;
     }
 
     public static IFailureDetector newFailureDetector()
