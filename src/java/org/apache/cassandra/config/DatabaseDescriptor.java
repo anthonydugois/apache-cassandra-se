@@ -195,10 +195,6 @@ public class DatabaseDescriptor
                                                                                                            ? new CommitLogSegmentManagerCDC(c, DatabaseDescriptor.getCommitLogLocation())
                                                                                                            : new CommitLogSegmentManagerStandard(c, DatabaseDescriptor.getCommitLogLocation());
 
-    /* ============================================ */
-    /* === Apache Cassandra: Scheduling Edition === */
-    /* ============================================ */
-
     private static IReadQueue readQueue;
 
     public static void daemonInitialization() throws ConfigurationException
