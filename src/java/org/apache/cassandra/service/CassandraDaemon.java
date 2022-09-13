@@ -480,6 +480,13 @@ public class CassandraDaemon
         else
             logger.info("Prewarming of auth caches is disabled");
 
+        if (DatabaseDescriptor.useAdvancedScheduling())
+        {
+            logger.info("Advanced scheduling mode successfully started");
+            logger.info("Replica selector: " + DatabaseDescriptor.getEndpointSnitch().getClass().getName());
+            logger.info("Local read queue: " + DatabaseDescriptor.getReadQueue().getClass().getName());
+        }
+
         completeSetup();
     }
 

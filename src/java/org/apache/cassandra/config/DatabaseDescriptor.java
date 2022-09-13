@@ -1453,6 +1453,11 @@ public class DatabaseDescriptor
         return detector;
     }
 
+    public static boolean useAdvancedScheduling()
+    {
+        return conf.advanced_scheduling;
+    }
+
     public static IAuthenticator getAuthenticator()
     {
         return authenticator;

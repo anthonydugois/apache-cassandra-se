@@ -20,12 +20,17 @@ package fr.ens.cassandra.se;
 
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.cassandra.locator.IEndpointSnitch;
 import org.apache.cassandra.locator.InetAddressAndPort;
 import org.apache.cassandra.locator.Replica;
 
 public class SimpleSelector extends ReplicaSelector
 {
+    private static final Logger logger = LoggerFactory.getLogger(SimpleSelector.class);
+
     public SimpleSelector(IEndpointSnitch snitch, Map<String, String> parameters)
     {
         super(snitch, parameters);

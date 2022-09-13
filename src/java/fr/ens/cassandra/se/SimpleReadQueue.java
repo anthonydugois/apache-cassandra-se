@@ -22,8 +22,13 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class SimpleReadQueue extends LocalReadQueue<Runnable>
 {
+    private static final Logger logger = LoggerFactory.getLogger(SimpleReadQueue.class);
+
     private final ConcurrentLinkedQueue<Runnable> queue = new ConcurrentLinkedQueue<>();
 
     public SimpleReadQueue(Map<String, String> parameters)

@@ -231,13 +231,13 @@ public enum Stage
 
     static LocalAwareExecutorPlus multiThreadedLowSignalReadStage(String jmxName, String jmxType, int numThreads, LocalAwareExecutorPlus.MaximumPoolSizeListener onSetMaximumPoolSize)
     {
-        Queue<Runnable> queue = DatabaseDescriptor.getReadQueue();
-
-        if (queue == null)
+        if (!DatabaseDescriptor.useAdvancedScheduling())
         {
-            // Fallback to standard low signal stage if no custom read queue is available
+            // Fallback to standard low signal stage
             return multiThreadedLowSignalStage(jmxName, jmxType, numThreads, onSetMaximumPoolSize);
         }
+
+        Queue<Runnable> queue = DatabaseDescriptor.getReadQueue();
 
         return executorFactory()
                .localAware()
