@@ -26,10 +26,13 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import fr.ens.cassandra.se.ReadCommandProvider;
+import fr.ens.cassandra.se.ReadCommandWrapper;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import org.apache.cassandra.concurrent.ExecutorLocals;
 import org.apache.cassandra.concurrent.Stage;
+import org.apache.cassandra.db.ReadCommand;
 import org.apache.cassandra.exceptions.IncompatibleSchemaException;
 import org.apache.cassandra.io.util.DataInputBuffer;
 import org.apache.cassandra.locator.InetAddressAndPort;
@@ -47,22 +50,22 @@ import static org.apache.cassandra.utils.MonotonicClock.Global.approxTime;
 
 /**
  * Implementation of {@link AbstractMessageHandler} for processing internode messages from peers.
- *
+ * <p>
  * # Small vs large messages
  * Small messages are deserialized in place, and then handed off to an appropriate
  * thread pool for processing. Large messages accumulate frames until completion of a message, then hand off
  * the untouched frames to the correct thread pool for the verb to be deserialized there and immediately processed.
- *
+ * <p>
  * # Flow control (backpressure)
- *
+ * <p>
  * To prevent nodes from overwhelming and bringing each other to the knees with more inbound messages that
  * can be processed in a timely manner, {@link InboundMessageHandler} implements a strict flow control policy.
  * The size of the incoming message is dependent on the messaging version of the specific peer connection. See
  * {@link Message.Serializer#inferMessageSize(ByteBuffer, int, int, int)}.
- *
+ * <p>
  * By default, every connection has 4MiB of exlusive permits available before needing to access the per-endpoint
  * and global reserves.
- *
+ * <p>
  * Permits are released after the verb handler has been invoked on the {@link Stage} for the {@link Verb} of the message.
  */
 public class InboundMessageHandler extends AbstractMessageHandler
@@ -399,11 +402,11 @@ public class InboundMessageHandler extends AbstractMessageHandler
         header.verb.stage.execute(ExecutorLocals.create(state), task);
     }
 
-    private abstract class ProcessMessage implements Runnable
+    private abstract class ProcessMessage implements Runnable, ReadCommandProvider
     {
         /**
          * Actually handle the message. Runs on the appropriate {@link Stage} for the {@link Verb}.
-         *
+         * <p>
          * Small messages will come pre-deserialized. Large messages will be deserialized on the stage,
          * just in time, and only then processed.
          */
@@ -445,10 +448,28 @@ public class InboundMessageHandler extends AbstractMessageHandler
             }
         }
 
+        @Override
+        public ReadCommandWrapper getReadCommand()
+        {
+            Message message = provideMessage();
+
+            if (message != null && message.payload instanceof ReadCommand)
+            {
+                return new ReadCommandWrapper((ReadCommand) message.payload);
+            }
+
+            return null;
+        }
+
         abstract int size();
+
         abstract Header header();
+
         abstract Message provideMessage();
-        void releaseResources() {}
+
+        void releaseResources()
+        {
+        }
     }
 
     private class ProcessSmallMessage extends ProcessMessage

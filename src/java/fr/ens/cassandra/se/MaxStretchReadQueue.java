@@ -20,18 +20,15 @@ package fr.ens.cassandra.se;
 
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SimpleReadQueue extends LocalReadQueue<Runnable>
+public class MaxStretchReadQueue extends LocalReadQueue<Runnable>
 {
-    private static final Logger logger = LoggerFactory.getLogger(SimpleReadQueue.class);
+    private static final Logger logger = LoggerFactory.getLogger(MaxStretchReadQueue.class);
 
-    private final ConcurrentLinkedQueue<Runnable> queue = new ConcurrentLinkedQueue<>();
-
-    public SimpleReadQueue(Map<String, String> parameters)
+    public MaxStretchReadQueue(Map<String, String> parameters)
     {
         super(parameters);
     }
@@ -51,18 +48,18 @@ public class SimpleReadQueue extends LocalReadQueue<Runnable>
     @Override
     public boolean offer(Runnable runnable)
     {
-        return queue.offer(runnable);
+        return false;
     }
 
     @Override
     public Runnable poll()
     {
-        return queue.poll();
+        return null;
     }
 
     @Override
     public Runnable peek()
     {
-        return queue.peek();
+        return null;
     }
 }

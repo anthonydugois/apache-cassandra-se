@@ -43,25 +43,26 @@ import static org.apache.cassandra.concurrent.ExecutorFactory.Global.executorFac
 
 public enum Stage
 {
-    READ              (false, "ReadStage",             "request",  DatabaseDescriptor::getConcurrentReaders,        DatabaseDescriptor::setConcurrentReaders,        Stage::multiThreadedLowSignalReadStage),
-    MUTATION          (true,  "MutationStage",         "request",  DatabaseDescriptor::getConcurrentWriters,        DatabaseDescriptor::setConcurrentWriters,        Stage::multiThreadedLowSignalStage),
-    COUNTER_MUTATION  (true,  "CounterMutationStage",  "request",  DatabaseDescriptor::getConcurrentCounterWriters, DatabaseDescriptor::setConcurrentCounterWriters, Stage::multiThreadedLowSignalStage),
-    VIEW_MUTATION     (true,  "ViewMutationStage",     "request",  DatabaseDescriptor::getConcurrentViewWriters,    DatabaseDescriptor::setConcurrentViewWriters,    Stage::multiThreadedLowSignalStage),
-    GOSSIP            (true,  "GossipStage",           "internal", () -> 1,                                         null,                                            Stage::singleThreadedStage),
-    REQUEST_RESPONSE  (false, "RequestResponseStage",  "request",  FBUtilities::getAvailableProcessors,             null,                                            Stage::multiThreadedLowSignalStage),
-    ANTI_ENTROPY      (false, "AntiEntropyStage",      "internal", () -> 1,                                         null,                                            Stage::singleThreadedStage),
-    MIGRATION         (false, "MigrationStage",        "internal", () -> 1,                                         null,                                            Stage::migrationStage),
-    MISC              (false, "MiscStage",             "internal", () -> 1,                                         null,                                            Stage::singleThreadedStage),
-    TRACING           (false, "TracingStage",          "internal", () -> 1,                                         null,                                            Stage::tracingStage),
-    INTERNAL_RESPONSE (false, "InternalResponseStage", "internal", FBUtilities::getAvailableProcessors,             null,                                            Stage::multiThreadedStage),
-    IMMEDIATE         (false, "ImmediateStage",        "internal", () -> 0,                                         null,                                            Stage::immediateExecutor),
-    PAXOS_REPAIR      (false, "PaxosRepairStage",      "internal", FBUtilities::getAvailableProcessors,             null,                                            Stage::multiThreadedStage),
+    READ(false, "ReadStage", "request", DatabaseDescriptor::getConcurrentReaders, DatabaseDescriptor::setConcurrentReaders, Stage::multiThreadedLowSignalReadStage),
+    MUTATION(true, "MutationStage", "request", DatabaseDescriptor::getConcurrentWriters, DatabaseDescriptor::setConcurrentWriters, Stage::multiThreadedLowSignalStage),
+    COUNTER_MUTATION(true, "CounterMutationStage", "request", DatabaseDescriptor::getConcurrentCounterWriters, DatabaseDescriptor::setConcurrentCounterWriters, Stage::multiThreadedLowSignalStage),
+    VIEW_MUTATION(true, "ViewMutationStage", "request", DatabaseDescriptor::getConcurrentViewWriters, DatabaseDescriptor::setConcurrentViewWriters, Stage::multiThreadedLowSignalStage),
+    GOSSIP(true, "GossipStage", "internal", () -> 1, null, Stage::singleThreadedStage),
+    REQUEST_RESPONSE(false, "RequestResponseStage", "request", FBUtilities::getAvailableProcessors, null, Stage::multiThreadedLowSignalStage),
+    ANTI_ENTROPY(false, "AntiEntropyStage", "internal", () -> 1, null, Stage::singleThreadedStage),
+    MIGRATION(false, "MigrationStage", "internal", () -> 1, null, Stage::migrationStage),
+    MISC(false, "MiscStage", "internal", () -> 1, null, Stage::singleThreadedStage),
+    TRACING(false, "TracingStage", "internal", () -> 1, null, Stage::tracingStage),
+    INTERNAL_RESPONSE(false, "InternalResponseStage", "internal", FBUtilities::getAvailableProcessors, null, Stage::multiThreadedStage),
+    IMMEDIATE(false, "ImmediateStage", "internal", () -> 0, null, Stage::immediateExecutor),
+    PAXOS_REPAIR(false, "PaxosRepairStage", "internal", FBUtilities::getAvailableProcessors, null, Stage::multiThreadedStage),
     ;
 
     public final String jmxName;
     private final Supplier<ExecutorPlus> executorSupplier;
     private volatile ExecutorPlus executor;
-    /** Set true if this executor should be gracefully shutdown before stopping
+    /**
+     * Set true if this executor should be gracefully shutdown before stopping
      * the commitlog allocator. Tasks on executors that issue mutations may
      * block indefinitely waiting for a new commitlog segment, preventing a
      * clean drain/shutdown.
@@ -86,9 +87,9 @@ public enum Stage
         return upperStageName;
     }
 
-    private static final Map<String,Stage> nameMap = Arrays.stream(values())
-                                                           .collect(toMap(s -> Stage.normalizeName(s.jmxName),
-                                                                          s -> s));
+    private static final Map<String, Stage> nameMap = Arrays.stream(values())
+                                                            .collect(toMap(s -> Stage.normalizeName(s.jmxName),
+                                                                           s -> s));
 
     public static Stage fromPoolName(String stageName)
     {
@@ -104,7 +105,7 @@ public enum Stage
         }
         catch (IllegalArgumentException e)
         {
-            switch(upperStageName) // Handle discrepancy between configuration file and stage names
+            switch (upperStageName) // Handle discrepancy between configuration file and stage names
             {
                 case "CONCURRENT_READS":
                     return READ;
@@ -123,12 +124,35 @@ public enum Stage
     }
 
     // Convenience functions to execute on this stage
-    public void execute(Runnable task) { executor().execute(task); }
-    public void execute(ExecutorLocals locals, Runnable task) { executor().execute(locals, task); }
-    public void maybeExecuteImmediately(Runnable task) { executor().maybeExecuteImmediately(task); }
-    public <T> Future<T> submit(Callable<T> task) { return executor().submit(task); }
-    public Future<?> submit(Runnable task) { return executor().submit(task); }
-    public <T> Future<T> submit(Runnable task, T result) { return executor().submit(task, result); }
+    public void execute(Runnable task)
+    {
+        executor().execute(task);
+    }
+
+    public void execute(ExecutorLocals locals, Runnable task)
+    {
+        executor().execute(locals, task);
+    }
+
+    public void maybeExecuteImmediately(Runnable task)
+    {
+        executor().maybeExecuteImmediately(task);
+    }
+
+    public <T> Future<T> submit(Callable<T> task)
+    {
+        return executor().submit(task);
+    }
+
+    public Future<?> submit(Runnable task)
+    {
+        return executor().submit(task);
+    }
+
+    public <T> Future<T> submit(Runnable task, T result)
+    {
+        return executor().submit(task, result);
+    }
 
     public ExecutorPlus executor()
     {
@@ -191,10 +215,10 @@ public enum Stage
     private static ExecutorPlus tracingStage(String jmxName, String jmxType, int numThreads, LocalAwareExecutorPlus.MaximumPoolSizeListener onSetMaximumPoolSize)
     {
         return executorFactory()
-                .withJmx(jmxType)
-                .configureSequential(jmxName)
-                .withQueueLimit(1000)
-                .withRejectedExecutionHandler((r, executor) -> MessagingService.instance().metrics.recordSelfDroppedMessage(Verb._TRACE)).build();
+               .withJmx(jmxType)
+               .configureSequential(jmxName)
+               .withQueueLimit(1000)
+               .withRejectedExecutionHandler((r, executor) -> MessagingService.instance().metrics.recordSelfDroppedMessage(Verb._TRACE)).build();
     }
 
     private static ExecutorPlus migrationStage(String jmxName, String jmxType, int numThreads, LocalAwareExecutorPlus.MaximumPoolSizeListener onSetMaximumPoolSize)
@@ -208,25 +232,25 @@ public enum Stage
     private static LocalAwareExecutorPlus singleThreadedStage(String jmxName, String jmxType, int numThreads, LocalAwareExecutorPlus.MaximumPoolSizeListener onSetMaximumPoolSize)
     {
         return executorFactory()
-                .localAware()
-                .withJmx(jmxType)
-                .sequential(jmxName);
+               .localAware()
+               .withJmx(jmxType)
+               .sequential(jmxName);
     }
 
     static LocalAwareExecutorPlus multiThreadedStage(String jmxName, String jmxType, int numThreads, LocalAwareExecutorPlus.MaximumPoolSizeListener onSetMaximumPoolSize)
     {
         return executorFactory()
-                .localAware()
-                .withJmx(jmxType)
-                .pooled(jmxName, numThreads);
+               .localAware()
+               .withJmx(jmxType)
+               .pooled(jmxName, numThreads);
     }
 
     static LocalAwareExecutorPlus multiThreadedLowSignalStage(String jmxName, String jmxType, int numThreads, LocalAwareExecutorPlus.MaximumPoolSizeListener onSetMaximumPoolSize)
     {
         return executorFactory()
-                .localAware()
-                .withJmx(jmxType)
-                .shared(jmxName, numThreads, onSetMaximumPoolSize);
+               .localAware()
+               .withJmx(jmxType)
+               .shared(jmxName, numThreads, onSetMaximumPoolSize);
     }
 
     static LocalAwareExecutorPlus multiThreadedLowSignalReadStage(String jmxName, String jmxType, int numThreads, LocalAwareExecutorPlus.MaximumPoolSizeListener onSetMaximumPoolSize)
