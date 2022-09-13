@@ -18,8 +18,22 @@
 
 package fr.ens.cassandra.se;
 
-import java.util.AbstractQueue;
+import java.util.Map;
 
-public abstract class AbstractReadQueue<E> extends AbstractQueue<E> implements IReadQueue<E>
+import org.apache.cassandra.locator.IEndpointSnitch;
+import org.apache.cassandra.locator.InetAddressAndPort;
+import org.apache.cassandra.locator.Replica;
+
+public class SimpleSelector extends ReplicaSelector
 {
+    public SimpleSelector(IEndpointSnitch snitch, Map<String, String> parameters)
+    {
+        super(snitch, parameters);
+    }
+
+    @Override
+    public int compareEndpoints(InetAddressAndPort target, Replica r1, Replica r2)
+    {
+        return snitch.compareEndpoints(target, r1, r2);
+    }
 }

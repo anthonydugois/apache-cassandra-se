@@ -18,8 +18,46 @@
 
 package fr.ens.cassandra.se;
 
-import java.util.AbstractQueue;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
-public abstract class AbstractReadQueue<E> extends AbstractQueue<E> implements IReadQueue<E>
+public class SimpleReadQueue extends LocalReadQueue<Runnable>
 {
+    private final ConcurrentLinkedQueue<Runnable> queue = new ConcurrentLinkedQueue<>();
+
+    public SimpleReadQueue(Map<String, String> parameters)
+    {
+        super(parameters);
+    }
+
+    @Override
+    public Iterator<Runnable> iterator()
+    {
+        return queue.iterator();
+    }
+
+    @Override
+    public int size()
+    {
+        return queue.size();
+    }
+
+    @Override
+    public boolean offer(Runnable runnable)
+    {
+        return queue.offer(runnable);
+    }
+
+    @Override
+    public Runnable poll()
+    {
+        return queue.poll();
+    }
+
+    @Override
+    public Runnable peek()
+    {
+        return queue.peek();
+    }
 }

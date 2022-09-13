@@ -1880,7 +1880,7 @@ drop_compact_storage_enabled: false
 advanced_scheduling: true
 
 replica_selector:
-  - class_name:
+  - class_name: fr.ens.cassandra.se.SimpleSelector
 
 local_read_queue:
-  - class_name:
+  - class_name: fr.ens.cassandra.se.SimpleReadQueue

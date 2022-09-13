@@ -18,6 +18,19 @@
 
 package fr.ens.cassandra.se;
 
+import java.util.Map;
+
 public abstract class LocalReadQueue<E> extends AbstractReadQueue<E>
 {
+    protected final Map<String, String> parameters;
+
+    protected LocalReadQueue(Map<String, String> parameters)
+    {
+        this.parameters = parameters;
+    }
+
+    public Map<String, String> getParameters()
+    {
+        return parameters;
+    }
 }

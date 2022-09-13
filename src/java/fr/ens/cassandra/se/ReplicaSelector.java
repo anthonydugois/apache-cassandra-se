@@ -18,8 +18,63 @@
 
 package fr.ens.cassandra.se;
 
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.cassandra.locator.AbstractEndpointSnitch;
+import org.apache.cassandra.locator.IEndpointSnitch;
+import org.apache.cassandra.locator.InetAddressAndPort;
+import org.apache.cassandra.locator.ReplicaCollection;
 
 public abstract class ReplicaSelector extends AbstractEndpointSnitch
 {
+    protected final IEndpointSnitch snitch;
+
+    protected final Map<String, String> parameters;
+
+    protected ReplicaSelector(IEndpointSnitch snitch, Map<String, String> parameters)
+    {
+        this.snitch = snitch;
+        this.parameters = parameters;
+    }
+
+    public IEndpointSnitch getSnitch()
+    {
+        return snitch;
+    }
+
+    public Map<String, String> getParameters()
+    {
+        return parameters;
+    }
+
+    @Override
+    public String getRack(InetAddressAndPort endpoint)
+    {
+        return snitch.getRack(endpoint);
+    }
+
+    @Override
+    public String getDatacenter(InetAddressAndPort endpoint)
+    {
+        return snitch.getDatacenter(endpoint);
+    }
+
+    @Override
+    public void gossiperStarting()
+    {
+        snitch.gossiperStarting();
+    }
+
+    @Override
+    public boolean isWorthMergingForRangeQuery(ReplicaCollection<?> merged, ReplicaCollection<?> l1, ReplicaCollection<?> l2)
+    {
+        return snitch.isWorthMergingForRangeQuery(merged, l1, l2);
+    }
+
+    @Override
+    public boolean validate(Set<String> datacenters, Set<String> racks)
+    {
+        return snitch.validate(datacenters, racks);
+    }
 }
