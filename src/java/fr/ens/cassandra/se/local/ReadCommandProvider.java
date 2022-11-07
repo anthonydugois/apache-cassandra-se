@@ -16,10 +16,9 @@
  * limitations under the License.
  */
 
-package fr.ens.cassandra.se;
+package fr.ens.cassandra.se.local;
 
-import java.util.AbstractQueue;
-
-public abstract class AbstractReadQueue<E> extends AbstractQueue<E> implements IReadQueue<E>
+public interface ReadCommandProvider
 {
+    ReadCommandWrapper getReadCommand();
 }

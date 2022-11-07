@@ -44,8 +44,8 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Uninterruptibles;
 
-import fr.ens.cassandra.se.ReadCommandProvider;
-import fr.ens.cassandra.se.ReadCommandWrapper;
+import fr.ens.cassandra.se.local.ReadCommandProvider;
+import fr.ens.cassandra.se.local.ReadCommandWrapper;
 import org.apache.cassandra.service.paxos.Ballot;
 import org.apache.cassandra.service.paxos.Commit;
 import org.apache.cassandra.service.paxos.ContentionStrategy;

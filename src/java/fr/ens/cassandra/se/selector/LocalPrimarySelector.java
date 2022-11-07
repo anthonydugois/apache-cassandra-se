@@ -16,50 +16,39 @@
  * limitations under the License.
  */
 
-package fr.ens.cassandra.se;
+package fr.ens.cassandra.se.selector;
 
-import java.util.Iterator;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MaxStretchReadQueue extends LocalReadQueue<Runnable>
+import org.apache.cassandra.locator.IEndpointSnitch;
+import org.apache.cassandra.locator.InetAddressAndPort;
+import org.apache.cassandra.locator.Replica;
+
+public class LocalPrimarySelector extends ReplicaSelector
 {
-    private static final Logger logger = LoggerFactory.getLogger(MaxStretchReadQueue.class);
+    private static final Logger logger = LoggerFactory.getLogger(LocalPrimarySelector.class);
 
-    public MaxStretchReadQueue(Map<String, String> parameters)
+    public LocalPrimarySelector(IEndpointSnitch snitch, Map<String, String> parameters)
     {
-        super(parameters);
+        super(snitch, parameters);
     }
 
     @Override
-    public Iterator<Runnable> iterator()
+    public int compareEndpoints(InetAddressAndPort target, Replica r1, Replica r2)
     {
-        throw new UnsupportedOperationException();
-    }
+        if (r1.endpoint().equals(target))
+        {
+            return -1;
+        }
 
-    @Override
-    public int size()
-    {
-        throw new UnsupportedOperationException();
-    }
+        if (r2.endpoint().equals(target))
+        {
+            return 1;
+        }
 
-    @Override
-    public boolean offer(Runnable runnable)
-    {
-        return false;
-    }
-
-    @Override
-    public Runnable poll()
-    {
-        return null;
-    }
-
-    @Override
-    public Runnable peek()
-    {
-        return null;
+        return snitch.compareEndpoints(target, r1, r2);
     }
 }

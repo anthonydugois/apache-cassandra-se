@@ -16,29 +16,10 @@
  * limitations under the License.
  */
 
-package fr.ens.cassandra.se;
+package fr.ens.cassandra.se.local;
 
-public class ReadTask implements Runnable, ReadCommandProvider
+import java.util.AbstractQueue;
+
+public abstract class AbstractReadQueue<E> extends AbstractQueue<E> implements IReadQueue<E>
 {
-    private final ReadCommandProvider provider;
-
-    private final Runnable runnable;
-
-    public ReadTask(ReadCommandProvider provider, Runnable runnable)
-    {
-        this.provider = provider;
-        this.runnable = runnable;
-    }
-
-    @Override
-    public void run()
-    {
-        runnable.run();
-    }
-
-    @Override
-    public ReadCommandWrapper getReadCommand()
-    {
-        return provider.getReadCommand();
-    }
 }

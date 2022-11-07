@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package fr.ens.cassandra.se;
+package fr.ens.cassandra.se.selector;
 
 import java.util.ArrayList;
 import java.util.Collections;

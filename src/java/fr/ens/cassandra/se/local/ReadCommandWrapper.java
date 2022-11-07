@@ -16,9 +16,36 @@
  * limitations under the License.
  */
 
-package fr.ens.cassandra.se;
+package fr.ens.cassandra.se.local;
 
-public interface ReadCommandProvider
+import java.nio.charset.StandardCharsets;
+
+import org.apache.cassandra.db.ReadCommand;
+import org.apache.cassandra.db.SinglePartitionReadCommand;
+
+public class ReadCommandWrapper
 {
-    ReadCommandWrapper getReadCommand();
+    private final ReadCommand command;
+
+    private String key = null;
+
+    public ReadCommandWrapper(ReadCommand command)
+    {
+        this.command = command;
+
+        if (command instanceof SinglePartitionReadCommand)
+        {
+            this.key = new String(((SinglePartitionReadCommand) command).partitionKey().getKey().array(), StandardCharsets.UTF_8);
+        }
+    }
+
+    public ReadCommand getCommand()
+    {
+        return command;
+    }
+
+    public String getKey()
+    {
+        return key;
+    }
 }

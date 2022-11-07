@@ -16,36 +16,29 @@
  * limitations under the License.
  */
 
-package fr.ens.cassandra.se;
+package fr.ens.cassandra.se.selector;
 
-import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
-import org.apache.cassandra.db.ReadCommand;
-import org.apache.cassandra.db.SinglePartitionReadCommand;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class ReadCommandWrapper
+import org.apache.cassandra.locator.IEndpointSnitch;
+import org.apache.cassandra.locator.InetAddressAndPort;
+import org.apache.cassandra.locator.Replica;
+
+public class PrimarySelector extends ReplicaSelector
 {
-    private final ReadCommand command;
+    private static final Logger logger = LoggerFactory.getLogger(PrimarySelector.class);
 
-    private String key = null;
-
-    public ReadCommandWrapper(ReadCommand command)
+    public PrimarySelector(IEndpointSnitch snitch, Map<String, String> parameters)
     {
-        this.command = command;
-
-        if (command instanceof SinglePartitionReadCommand)
-        {
-            this.key = new String(((SinglePartitionReadCommand) command).partitionKey().getKey().array(), StandardCharsets.UTF_8);
-        }
+        super(snitch, parameters);
     }
 
-    public ReadCommand getCommand()
+    @Override
+    public int compareEndpoints(InetAddressAndPort target, Replica r1, Replica r2)
     {
-        return command;
-    }
-
-    public String getKey()
-    {
-        return key;
+        return snitch.compareEndpoints(target, r1, r2);
     }
 }

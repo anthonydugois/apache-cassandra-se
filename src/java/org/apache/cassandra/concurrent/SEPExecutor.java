@@ -28,8 +28,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import fr.ens.cassandra.se.ReadCommandProvider;
-import fr.ens.cassandra.se.ReadTask;
+import fr.ens.cassandra.se.local.LocalTask;
 import org.apache.cassandra.utils.WithResources;
 import org.apache.cassandra.utils.concurrent.Future;
 import org.apache.cassandra.utils.MBeanWrapper;
@@ -212,14 +211,7 @@ public class SEPExecutor implements LocalAwareExecutorPlus, SEPExecutorMBean
     @Override
     public void maybeExecuteImmediately(Runnable task)
     {
-        if (task instanceof ReadCommandProvider)
-        {
-            task = new ReadTask((ReadCommandProvider) task, taskFactory.toExecute(task));
-        }
-        else
-        {
-            task = taskFactory.toExecute(task);
-        }
+        task = LocalTask.create(task, taskFactory.toExecute(task));
 
         if (!takeWorkPermit(false))
         {
@@ -245,31 +237,13 @@ public class SEPExecutor implements LocalAwareExecutorPlus, SEPExecutorMBean
     @Override
     public void execute(Runnable run)
     {
-        if (run instanceof ReadCommandProvider)
-        {
-            run = new ReadTask((ReadCommandProvider) run, taskFactory.toExecute(run));
-        }
-        else
-        {
-            run = taskFactory.toExecute(run);
-        }
-
-        addTask(run);
+        addTask(LocalTask.create(run, taskFactory.toExecute(run)));
     }
 
     @Override
     public void execute(WithResources withResources, Runnable run)
     {
-        if (run instanceof ReadCommandProvider)
-        {
-            run = new ReadTask((ReadCommandProvider) run, taskFactory.toExecute(withResources, run));
-        }
-        else
-        {
-            run = taskFactory.toExecute(withResources, run);
-        }
-
-        addTask(run);
+        addTask(LocalTask.create(run, taskFactory.toExecute(withResources, run)));
     }
 
     @Override

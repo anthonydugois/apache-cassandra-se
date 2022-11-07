@@ -60,7 +60,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.ens.cassandra.se.IReadQueue;
+import fr.ens.cassandra.se.local.IReadQueue;
 import org.apache.cassandra.audit.AuditLogOptions;
 import org.apache.cassandra.auth.AllowAllInternodeAuthenticator;
 import org.apache.cassandra.auth.AuthConfig;

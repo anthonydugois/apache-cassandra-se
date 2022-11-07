@@ -26,8 +26,8 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.ens.cassandra.se.ReadCommandProvider;
-import fr.ens.cassandra.se.ReadCommandWrapper;
+import fr.ens.cassandra.se.local.ReadCommandProvider;
+import fr.ens.cassandra.se.local.ReadCommandWrapper;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import org.apache.cassandra.concurrent.ExecutorLocals;
