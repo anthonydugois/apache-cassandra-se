@@ -26,6 +26,7 @@ import org.junit.Test;
 import com.datastax.driver.core.PreparedStatement;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.cql3.CQLTester;
+import org.apache.cassandra.db.SinglePartitionReadCommand;
 import org.apache.cassandra.exceptions.ConfigurationException;
 import org.apache.cassandra.locator.IEndpointSnitch;
 import org.apache.cassandra.locator.InetAddressAndPort;
@@ -131,6 +132,10 @@ public class AlterNTSTest extends CQLTester
             public <C extends ReplicaCollection<? extends C>> C sortedByProximity(InetAddressAndPort address, C addresses)
             {
                 return null;
+            }
+            public <C extends ReplicaCollection<? extends C>> C sortedByProximity(InetAddressAndPort address, C addresses, SinglePartitionReadCommand command)
+            {
+                return sortedByProximity(address, addresses);
             }
 
             public int compareEndpoints(InetAddressAndPort target, Replica r1, Replica r2)

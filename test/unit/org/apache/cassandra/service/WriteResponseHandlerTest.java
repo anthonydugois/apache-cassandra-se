@@ -25,6 +25,8 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Predicates;
+
+import org.apache.cassandra.db.SinglePartitionReadCommand;
 import org.apache.cassandra.dht.Murmur3Partitioner;
 import org.apache.cassandra.locator.EndpointsForToken;
 import org.apache.cassandra.locator.ReplicaPlans;
@@ -104,6 +106,10 @@ public class WriteResponseHandlerTest
             public <C extends ReplicaCollection<? extends C>> C sortedByProximity(InetAddressAndPort address, C replicas)
             {
                 return replicas;
+            }
+            public <C extends ReplicaCollection<? extends C>> C sortedByProximity(InetAddressAndPort address, C addresses, SinglePartitionReadCommand command)
+            {
+                return sortedByProximity(address, addresses);
             }
 
             public int compareEndpoints(InetAddressAndPort target, Replica a1, Replica a2)

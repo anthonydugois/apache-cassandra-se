@@ -27,6 +27,7 @@ import java.util.function.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
+import org.apache.cassandra.db.SinglePartitionReadCommand;
 import org.apache.cassandra.dht.Murmur3Partitioner;
 import org.apache.cassandra.dht.Token;
 import org.apache.cassandra.locator.EndpointsForToken;
@@ -119,6 +120,10 @@ public class WriteResponseHandlerTransientTest
             public <C extends ReplicaCollection<? extends C>> C sortedByProximity(InetAddressAndPort address, C unsortedAddress)
             {
                 return unsortedAddress;
+            }
+            public <C extends ReplicaCollection<? extends C>> C sortedByProximity(InetAddressAndPort address, C addresses, SinglePartitionReadCommand command)
+            {
+                return sortedByProximity(address, addresses);
             }
 
             public int compareEndpoints(InetAddressAndPort target, Replica a1, Replica a2)
