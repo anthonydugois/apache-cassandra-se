@@ -20,6 +20,7 @@ package org.apache.cassandra.db;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import fr.ens.cassandra.se.state.property.Property;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.db.partitions.UnfilteredPartitionIterator;
 import org.apache.cassandra.dht.Token;
@@ -88,6 +89,9 @@ public class ReadCommandVerbHandler implements IVerbHandler<ReadCommand>
         Tracing.trace("Enqueuing response to {}", message.from());
         Message<ReadResponse> reply = message.responseWith(response);
         reply = MessageParams.addToMessage(reply);
+
+        reply.feedback().put(Property.COMPLETED_READS);
+
         MessagingService.instance().send(reply, message.from());
     }
 

@@ -52,7 +52,7 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 /**
  * Sends a read request to the replicas needed to satisfy a given ConsistencyLevel.
- *
+ * <p>
  * Optionally, may perform additional requests to provide redundancy against replica failure:
  * AlwaysSpeculatingReadExecutor will always send a request to one extra replica, while
  * SpeculatingReadExecutor will wait until it looks like the original request is in danger
@@ -63,14 +63,14 @@ public abstract class AbstractReadExecutor
     private static final Logger logger = LoggerFactory.getLogger(AbstractReadExecutor.class);
 
     protected final ReadCommand command;
-    private   final ReplicaPlan.SharedForTokenRead replicaPlan;
+    private final ReplicaPlan.SharedForTokenRead replicaPlan;
     protected final ReadRepair<EndpointsForToken, ReplicaPlan.ForTokenRead> readRepair;
     protected final DigestResolver<EndpointsForToken, ReplicaPlan.ForTokenRead> digestResolver;
     protected final ReadCallback<EndpointsForToken, ReplicaPlan.ForTokenRead> handler;
     protected final TraceState traceState;
     protected final ColumnFamilyStore cfs;
     protected final long queryStartNanoTime;
-    private   final int initialDataRequestCount;
+    private final int initialDataRequestCount;
     protected volatile PartitionIterator result = null;
 
     AbstractReadExecutor(ColumnFamilyStore cfs, ReadCommand command, ReplicaPlan.ForTokenRead replicaPlan, int initialDataRequestCount, long queryStartNanoTime)
@@ -132,7 +132,7 @@ public abstract class AbstractReadExecutor
         boolean hasLocalEndpoint = false;
         Message<ReadCommand> message = null;
 
-        for (Replica replica: replicas)
+        for (Replica replica : replicas)
         {
             assert replica.isFull() || readCommand.acceptsTransient();
 
@@ -215,8 +215,8 @@ public abstract class AbstractReadExecutor
     }
 
     /**
-     *  Returns true if speculation should occur and if it should then block until it is time to
-     *  send the speculative reads
+     * Returns true if speculation should occur and if it should then block until it is time to
+     * send the speculative reads
      */
     boolean shouldSpeculateAndMaybeWait()
     {
@@ -232,7 +232,9 @@ public abstract class AbstractReadExecutor
         return replicaPlan.get();
     }
 
-    void onReadTimeout() {}
+    void onReadTimeout()
+    {
+    }
 
     public static class NeverSpeculatingReadExecutor extends AbstractReadExecutor
     {
@@ -292,8 +294,8 @@ public abstract class AbstractReadExecutor
                     assert extraReplica != null;
 
                     retryCommand = extraReplica.isTransient()
-                            ? command.copyAsTransientQuery(extraReplica)
-                            : command.copyAsDigestQuery(extraReplica);
+                                   ? command.copyAsTransientQuery(extraReplica)
+                                   : command.copyAsDigestQuery(extraReplica);
                 }
                 else
                 {
