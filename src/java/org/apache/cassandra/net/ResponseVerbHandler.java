@@ -20,6 +20,7 @@ package org.apache.cassandra.net;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import fr.ens.cassandra.se.state.ClusterState;
 import org.apache.cassandra.exceptions.RequestFailureReason;
 import org.apache.cassandra.tracing.Tracing;
 
@@ -35,6 +36,8 @@ class ResponseVerbHandler implements IVerbHandler
     @Override
     public void doVerb(Message message)
     {
+        ClusterState.instance.state(message.from()).add(message.feedback());
+
         RequestCallbacks.CallbackInfo callbackInfo = MessagingService.instance().callbacks.remove(message.id(), message.from());
         if (callbackInfo == null)
         {

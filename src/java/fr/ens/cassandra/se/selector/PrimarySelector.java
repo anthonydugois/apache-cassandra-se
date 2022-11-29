@@ -23,9 +23,12 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import fr.ens.cassandra.se.state.ClusterState;
+import fr.ens.cassandra.se.state.property.Property;
 import org.apache.cassandra.locator.IEndpointSnitch;
 import org.apache.cassandra.locator.InetAddressAndPort;
 import org.apache.cassandra.locator.Replica;
+import org.apache.cassandra.locator.ReplicaCollection;
 
 public class PrimarySelector extends ReplicaSelector
 {
@@ -34,6 +37,19 @@ public class PrimarySelector extends ReplicaSelector
     public PrimarySelector(IEndpointSnitch snitch, Map<String, String> parameters)
     {
         super(snitch, parameters);
+    }
+
+    @Override
+    public <C extends ReplicaCollection<? extends C>> C sortedByProximity(InetAddressAndPort address, C unsortedAddress)
+    {
+        ClusterState.instance.updateLocal();
+
+        for (Replica replica : unsortedAddress)
+        {
+            logger.info(replica + " " + ClusterState.instance.state(replica.endpoint()).get(Property.COMPLETED_READS));
+        }
+
+        return super.sortedByProximity(address, unsortedAddress);
     }
 
     @Override

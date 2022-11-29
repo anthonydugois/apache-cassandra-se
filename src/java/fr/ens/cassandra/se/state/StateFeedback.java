@@ -31,7 +31,7 @@ import org.apache.cassandra.io.IVersionedSerializer;
 import org.apache.cassandra.io.util.DataInputPlus;
 import org.apache.cassandra.io.util.DataOutputPlus;
 
-public class StateFeedback
+public class StateFeedback implements Comparable<StateFeedback>
 {
     private static final Logger logger = LoggerFactory.getLogger(StateFeedback.class);
 
@@ -41,9 +41,11 @@ public class StateFeedback
         public void serialize(StateFeedback feedback, DataOutputPlus out, int version) throws IOException
         {
             long payloadSize = feedback.payloadSize(version);
+            long timestamp = feedback.timestamp();
             int count = feedback.size();
 
             out.writeUnsignedVInt(payloadSize); // include payload size to make inference easier
+            out.writeUnsignedVInt(timestamp);
             out.writeUnsignedVInt(count);
 
             for (Map.Entry<Property, Object> entry : feedback.values().entrySet())
@@ -60,9 +62,10 @@ public class StateFeedback
         public StateFeedback deserialize(DataInputPlus in, int version) throws IOException
         {
             long payloadSize = in.readUnsignedVInt();
+            long timestamp = in.readUnsignedVInt();
             int count = (int) in.readUnsignedVInt();
 
-            StateFeedback feedback = new StateFeedback();
+            StateFeedback feedback = new StateFeedback(timestamp);
 
             for (int i = 0; i < count; ++i)
             {
@@ -86,7 +89,24 @@ public class StateFeedback
         }
     };
 
+    private final long timestamp;
+
     private final Map<Property, Object> values = new EnumMap<>(Property.class);
+
+    public StateFeedback()
+    {
+        this(System.nanoTime());
+    }
+
+    public StateFeedback(long timestamp)
+    {
+        this.timestamp = timestamp;
+    }
+
+    public long timestamp()
+    {
+        return timestamp;
+    }
 
     public Map<Property, Object> values()
     {
@@ -105,7 +125,7 @@ public class StateFeedback
         return this;
     }
 
-    public StateFeedback put(Property... properties)
+    public StateFeedback put(Iterable<Property> properties)
     {
         for (Property property : properties)
         {
@@ -118,6 +138,7 @@ public class StateFeedback
     public long payloadSize(int version)
     {
         long size = 0;
+        size += TypeSizes.sizeofUnsignedVInt(timestamp);
         size += TypeSizes.sizeofUnsignedVInt(size());
 
         for (Map.Entry<Property, Object> entry : values.entrySet())
@@ -133,8 +154,14 @@ public class StateFeedback
     }
 
     @Override
+    public int compareTo(StateFeedback feedback)
+    {
+        return Long.compare(timestamp, feedback.timestamp());
+    }
+
+    @Override
     public String toString()
     {
-        return values.toString();
+        return "state(" + values + ") [" + timestamp + ']';
     }
 }

@@ -90,7 +90,7 @@ public class ReadCommandVerbHandler implements IVerbHandler<ReadCommand>
         Message<ReadResponse> reply = message.responseWith(response);
         reply = MessageParams.addToMessage(reply);
 
-        reply.feedback().put(Property.COMPLETED_READS);
+        reply.feedback().put(Property.properties());
 
         MessagingService.instance().send(reply, message.from());
     }

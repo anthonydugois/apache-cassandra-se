@@ -19,6 +19,7 @@
 package fr.ens.cassandra.se.state.property;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.cassandra.concurrent.Stage;
 import org.apache.cassandra.db.TypeSizes;
@@ -56,14 +57,27 @@ public enum Property
                             return Stage.READ.executor().getCompletedTaskCount();
                         }
                     },
-                    new PropertyAggregator()
+                    new PropertyAggregator<Long, Long>()
                     {
+                        @Override
+                        public Long get()
+                        {
+                            return 0L;
+                        }
+
+                        @Override
+                        public Long apply(Long current, Long value)
+                        {
+                            return value;
+                        }
                     });
 
     private final int id;
     private final PropertySerializer serializer;
     private final PropertyMeasure measure;
     private final PropertyAggregator aggregator;
+
+    private static final List<Property> properties = List.of(COMPLETED_READS);
 
     private static final Property[] idToProperty;
 
@@ -100,11 +114,17 @@ public enum Property
         this.aggregator = aggregator;
     }
 
+    public static List<Property> properties()
+    {
+        return properties;
+    }
+
     public static Property fromId(int id)
     {
         Property property = id >= 0 && id < idToProperty.length ? idToProperty[id] : null;
 
-        if (property == null) {
+        if (property == null)
+        {
             throw new IllegalArgumentException("Unknown property id: " + id);
         }
 
@@ -126,8 +146,8 @@ public enum Property
         return (PropertyMeasure<T>) measure;
     }
 
-    public PropertyAggregator aggregator()
+    public <T, U> PropertyAggregator<T, U> aggregator()
     {
-        return aggregator;
+        return (PropertyAggregator<T, U>) aggregator;
     }
 }

@@ -18,6 +18,53 @@
 
 package fr.ens.cassandra.se.state;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import fr.ens.cassandra.se.state.property.Property;
+import org.apache.cassandra.locator.InetAddressAndPort;
+import org.apache.cassandra.utils.FBUtilities;
+
 public class ClusterState
 {
+    public static final ClusterState instance = new ClusterState();
+
+    private final ExecutorService executor = Executors.newCachedThreadPool();
+
+    private final ConcurrentMap<InetAddressAndPort, EndpointState> states = new ConcurrentHashMap<>();
+
+    public EndpointState state(InetAddressAndPort address)
+    {
+        EndpointState state = states.get(address);
+
+        if (state == null)
+        {
+            state = new EndpointState(address);
+
+            EndpointState currentState = states.putIfAbsent(address, state);
+
+            if (currentState == null)
+            {
+                executor.execute(state);
+            }
+            else
+            {
+                state = currentState;
+            }
+        }
+
+        return state;
+    }
+
+    public void updateLocal()
+    {
+        InetAddressAndPort address = FBUtilities.getLocalAddressAndPort();
+        StateFeedback feedback = new StateFeedback();
+
+        feedback.put(Property.properties());
+
+        state(address).add(feedback);
+    }
 }

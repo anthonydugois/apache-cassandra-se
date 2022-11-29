@@ -18,6 +18,9 @@
 
 package fr.ens.cassandra.se.state.property;
 
-public interface PropertyAggregator
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
+
+public interface PropertyAggregator<T, U> extends Supplier<T>, BiFunction<T, U, T>
 {
 }

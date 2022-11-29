@@ -18,7 +18,8 @@
 
 package fr.ens.cassandra.se.state.property;
 
-public interface PropertyMeasure<T>
+import java.util.function.Supplier;
+
+public interface PropertyMeasure<T> extends Supplier<T>
 {
-    T get();
 }
