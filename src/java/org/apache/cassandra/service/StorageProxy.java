@@ -44,8 +44,8 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Uninterruptibles;
 
-import fr.ens.cassandra.se.local.ReadCommandProvider;
-import fr.ens.cassandra.se.local.ReadCommandWrapper;
+import fr.ens.cassandra.se.local.ReadOperationProvider;
+import fr.ens.cassandra.se.local.ReadOperation;
 import org.apache.cassandra.service.paxos.Ballot;
 import org.apache.cassandra.service.paxos.Commit;
 import org.apache.cassandra.service.paxos.ContentionStrategy;
@@ -2129,7 +2129,7 @@ public class StorageProxy implements StorageProxyMBean
         return concatAndBlockOnRepair(results, repairs);
     }
 
-    public static class LocalReadRunnable extends DroppableRunnable implements RunnableDebuggableTask, ReadCommandProvider
+    public static class LocalReadRunnable extends DroppableRunnable implements RunnableDebuggableTask, ReadOperationProvider
     {
         private final ReadCommand command;
         private final ReadCallback handler;
@@ -2219,9 +2219,9 @@ public class StorageProxy implements StorageProxyMBean
         }
 
         @Override
-        public ReadCommandWrapper getReadCommand()
+        public ReadOperation getReadOperation()
         {
-            return new ReadCommandWrapper(command);
+            return ReadOperation.from(command);
         }
     }
 

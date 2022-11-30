@@ -19,6 +19,8 @@
 package org.apache.cassandra.locator;
 
 import com.google.common.annotations.VisibleForTesting;
+
+import fr.ens.cassandra.se.local.ReadOperation;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.db.Keyspace;
 import org.apache.cassandra.db.PartitionPosition;
@@ -334,10 +336,10 @@ public abstract class ReplicaLayout<E extends Endpoints<E>>
         return new ReplicaLayout.ForTokenRead(replicationStrategy, replicas);
     }
 
-    public static ReplicaLayout.ForTokenRead forTokenReadLiveSorted(AbstractReplicationStrategy replicationStrategy, SinglePartitionReadCommand command)
+    public static ReplicaLayout.ForTokenRead forTokenReadLiveSorted(AbstractReplicationStrategy replicationStrategy, ReadOperation<SinglePartitionReadCommand> operation)
     {
-        EndpointsForToken replicas = replicationStrategy.getNaturalReplicasForToken(command.partitionKey().getToken());
-        replicas = DatabaseDescriptor.getEndpointSnitch().sortedByProximity(FBUtilities.getBroadcastAddressAndPort(), replicas, command);
+        EndpointsForToken replicas = replicationStrategy.getNaturalReplicasForToken(operation.command().partitionKey().getToken());
+        replicas = DatabaseDescriptor.getEndpointSnitch().sortedByProximity(FBUtilities.getBroadcastAddressAndPort(), replicas, operation);
         replicas = replicas.filter(FailureDetector.isReplicaAlive);
         return new ReplicaLayout.ForTokenRead(replicationStrategy, replicas);
     }

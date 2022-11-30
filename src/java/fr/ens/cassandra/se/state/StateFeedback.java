@@ -25,7 +25,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.ens.cassandra.se.state.property.Property;
+import fr.ens.cassandra.se.state.facts.Fact;
 import org.apache.cassandra.db.TypeSizes;
 import org.apache.cassandra.io.IVersionedSerializer;
 import org.apache.cassandra.io.util.DataInputPlus;
@@ -48,13 +48,13 @@ public class StateFeedback implements Comparable<StateFeedback>
             out.writeUnsignedVInt(timestamp);
             out.writeUnsignedVInt(count);
 
-            for (Map.Entry<Property, Object> entry : feedback.values().entrySet())
+            for (Map.Entry<Fact, Object> entry : feedback.values().entrySet())
             {
-                Property property = entry.getKey();
+                Fact fact = entry.getKey();
                 Object value = entry.getValue();
 
-                out.writeUnsignedVInt(property.getId());
-                property.serializer().serialize(value, out, version);
+                out.writeUnsignedVInt(fact.getId());
+                fact.serializer().serialize(value, out, version);
             }
         }
 
@@ -71,10 +71,10 @@ public class StateFeedback implements Comparable<StateFeedback>
             {
                 int id = (int) in.readUnsignedVInt();
 
-                Property property = Property.fromId(id);
-                Object value = property.serializer().deserialize(in, version);
+                Fact fact = Fact.fromId(id);
+                Object value = fact.serializer().deserialize(in, version);
 
-                feedback.put(property, value);
+                feedback.put(fact, value);
             }
 
             return feedback;
@@ -91,7 +91,7 @@ public class StateFeedback implements Comparable<StateFeedback>
 
     private final long timestamp;
 
-    private final Map<Property, Object> values = new EnumMap<>(Property.class);
+    private final Map<Fact, Object> values = new EnumMap<>(Fact.class);
 
     public StateFeedback()
     {
@@ -108,7 +108,7 @@ public class StateFeedback implements Comparable<StateFeedback>
         return timestamp;
     }
 
-    public Map<Property, Object> values()
+    public Map<Fact, Object> values()
     {
         return values;
     }
@@ -118,18 +118,18 @@ public class StateFeedback implements Comparable<StateFeedback>
         return values.size();
     }
 
-    public StateFeedback put(Property property, Object value)
+    public StateFeedback put(Fact fact, Object value)
     {
-        values.put(property, value);
+        values.put(fact, value);
 
         return this;
     }
 
-    public StateFeedback put(Iterable<Property> properties)
+    public StateFeedback put(Iterable<Fact> facts)
     {
-        for (Property property : properties)
+        for (Fact fact : facts)
         {
-            put(property, property.measure().get());
+            put(fact, fact.measure().get());
         }
 
         return this;
@@ -141,13 +141,13 @@ public class StateFeedback implements Comparable<StateFeedback>
         size += TypeSizes.sizeofUnsignedVInt(timestamp);
         size += TypeSizes.sizeofUnsignedVInt(size());
 
-        for (Map.Entry<Property, Object> entry : values.entrySet())
+        for (Map.Entry<Fact, Object> entry : values.entrySet())
         {
-            Property property = entry.getKey();
+            Fact fact = entry.getKey();
             Object value = entry.getValue();
 
-            size += TypeSizes.sizeofUnsignedVInt(property.getId());
-            size += property.serializer().serializedSize(value, version);
+            size += TypeSizes.sizeofUnsignedVInt(fact.getId());
+            size += fact.serializer().serializedSize(value, version);
         }
 
         return size;

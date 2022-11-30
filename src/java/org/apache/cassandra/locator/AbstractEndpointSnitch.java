@@ -18,6 +18,8 @@
 package org.apache.cassandra.locator;
 
 import com.google.common.collect.Iterables;
+
+import fr.ens.cassandra.se.local.ReadOperation;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.db.SinglePartitionReadCommand;
 
@@ -36,7 +38,7 @@ public abstract class AbstractEndpointSnitch implements IEndpointSnitch
         return unsortedAddress.sorted((r1, r2) -> compareEndpoints(address, r1, r2));
     }
 
-    public <C extends ReplicaCollection<? extends C>> C sortedByProximity(InetAddressAndPort address, C unsortedAddress, SinglePartitionReadCommand command)
+    public <C extends ReplicaCollection<? extends C>> C sortedByProximity(InetAddressAndPort address, C unsortedAddress, ReadOperation<SinglePartitionReadCommand> operation)
     {
         return sortedByProximity(address, unsortedAddress);
     }

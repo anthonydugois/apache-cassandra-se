@@ -18,46 +18,39 @@
 
 package fr.ens.cassandra.se.local;
 
-public abstract class LocalTask implements Runnable
+import java.nio.charset.StandardCharsets;
+
+import org.apache.cassandra.db.ReadCommand;
+import org.apache.cassandra.db.SinglePartitionReadCommand;
+
+public class ReadOperation<T extends ReadCommand>
 {
-    private final Runnable runnable;
+    private final T command;
 
-    public LocalTask(Runnable runnable)
+    private String key = null;
+
+    public ReadOperation(T command)
     {
-        this.runnable = runnable;
+        this.command = command;
+
+        if (command instanceof SinglePartitionReadCommand)
+        {
+            this.key = new String(((SinglePartitionReadCommand) command).partitionKey().getKey().array(), StandardCharsets.UTF_8);
+        }
     }
 
-    public static Runnable create(Runnable task, Runnable runnable)
+    public static <T extends ReadCommand> ReadOperation<T> from(T command)
     {
-        if (task instanceof ReadOperationProvider)
-        {
-            return new ReadTask((ReadOperationProvider) task, runnable);
-        }
-
-        return runnable;
+        return new ReadOperation<>(command);
     }
 
-    @Override
-    public void run()
+    public T command()
     {
-        runnable.run();
+        return command;
     }
 
-    public static class ReadTask extends LocalTask implements ReadOperationProvider
+    public String key()
     {
-        private final ReadOperationProvider provider;
-
-        public ReadTask(ReadOperationProvider provider, Runnable runnable)
-        {
-            super(runnable);
-
-            this.provider = provider;
-        }
-
-        @Override
-        public ReadOperation getReadOperation()
-        {
-            return provider.getReadOperation();
-        }
+        return key;
     }
 }

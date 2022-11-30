@@ -16,10 +16,11 @@
  * limitations under the License.
  */
 
-package fr.ens.cassandra.se.state.property;
+package fr.ens.cassandra.se.state.facts;
 
-import org.apache.cassandra.io.IVersionedSerializer;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
-public interface PropertySerializer<T> extends IVersionedSerializer<T>
+public interface FactAggregator<T, U> extends Supplier<T>, BiFunction<T, U, T>
 {
 }

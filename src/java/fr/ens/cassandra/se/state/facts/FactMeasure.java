@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 
-package fr.ens.cassandra.se.local;
+package fr.ens.cassandra.se.state.facts;
 
-public interface ReadCommandProvider
+import java.util.function.Supplier;
+
+public interface FactMeasure<T> extends Supplier<T>
 {
-    ReadCommandWrapper getReadCommand();
 }

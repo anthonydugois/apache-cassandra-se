@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package fr.ens.cassandra.se.state.property;
+package fr.ens.cassandra.se.state.facts;
 
 import java.io.IOException;
 import java.util.List;
@@ -26,10 +26,10 @@ import org.apache.cassandra.db.TypeSizes;
 import org.apache.cassandra.io.util.DataInputPlus;
 import org.apache.cassandra.io.util.DataOutputPlus;
 
-public enum Property
+public enum Fact
 {
     COMPLETED_READS(1,
-                    new PropertySerializer<Long>()
+                    new FactSerializer<Long>()
                     {
                         @Override
                         public void serialize(Long value, DataOutputPlus out, int version) throws IOException
@@ -49,7 +49,7 @@ public enum Property
                             return TypeSizes.sizeofUnsignedVInt(value);
                         }
                     },
-                    new PropertyMeasure<Long>()
+                    new FactMeasure<Long>()
                     {
                         @Override
                         public Long get()
@@ -57,7 +57,7 @@ public enum Property
                             return Stage.READ.executor().getCompletedTaskCount();
                         }
                     },
-                    new PropertyAggregator<Long, Long>()
+                    new FactAggregator<Long, Long>()
                     {
                         @Override
                         public Long get()
@@ -73,40 +73,40 @@ public enum Property
                     });
 
     private final int id;
-    private final PropertySerializer serializer;
-    private final PropertyMeasure measure;
-    private final PropertyAggregator aggregator;
+    private final FactSerializer serializer;
+    private final FactMeasure measure;
+    private final FactAggregator aggregator;
 
-    private static final List<Property> properties = List.of(COMPLETED_READS);
+    private static final List<Fact> facts = List.of(COMPLETED_READS);
 
-    private static final Property[] idToProperty;
+    private static final Fact[] ID_TO_FACT;
 
     static
     {
-        Property[] properties = values();
+        Fact[] facts = values();
 
         int max = -1;
-        for (Property property : properties)
+        for (Fact fact : facts)
         {
-            max = Math.max(max, property.id);
+            max = Math.max(max, fact.id);
         }
 
-        Property[] idMap = new Property[max + 1];
+        Fact[] map = new Fact[max + 1];
 
-        for (Property property : properties)
+        for (Fact fact : facts)
         {
-            if (idMap[property.id] != null)
+            if (map[fact.id] != null)
             {
-                throw new IllegalArgumentException("Cannot have two props that map to the same id: " + property + " and " + idMap[property.id]);
+                throw new IllegalArgumentException("Cannot have two facts that map to the same id: " + fact + " and " + map[fact.id]);
             }
 
-            idMap[property.id] = property;
+            map[fact.id] = fact;
         }
 
-        idToProperty = idMap;
+        ID_TO_FACT = map;
     }
 
-    Property(int id, PropertySerializer serializer, PropertyMeasure measure, PropertyAggregator aggregator)
+    Fact(int id, FactSerializer serializer, FactMeasure measure, FactAggregator aggregator)
     {
         this.id = id;
         this.serializer = serializer;
@@ -114,21 +114,21 @@ public enum Property
         this.aggregator = aggregator;
     }
 
-    public static List<Property> properties()
+    public static List<Fact> facts()
     {
-        return properties;
+        return facts;
     }
 
-    public static Property fromId(int id)
+    public static Fact fromId(int id)
     {
-        Property property = id >= 0 && id < idToProperty.length ? idToProperty[id] : null;
+        Fact fact = id >= 0 && id < ID_TO_FACT.length ? ID_TO_FACT[id] : null;
 
-        if (property == null)
+        if (fact == null)
         {
-            throw new IllegalArgumentException("Unknown property id: " + id);
+            throw new IllegalArgumentException("Unknown fact id: " + id);
         }
 
-        return property;
+        return fact;
     }
 
     public int getId()
@@ -136,18 +136,18 @@ public enum Property
         return id;
     }
 
-    public <T> PropertySerializer<T> serializer()
+    public <T> FactSerializer<T> serializer()
     {
-        return (PropertySerializer<T>) serializer;
+        return (FactSerializer<T>) serializer;
     }
 
-    public <T> PropertyMeasure<T> measure()
+    public <T> FactMeasure<T> measure()
     {
-        return (PropertyMeasure<T>) measure;
+        return (FactMeasure<T>) measure;
     }
 
-    public <T, U> PropertyAggregator<T, U> aggregator()
+    public <T, U> FactAggregator<T, U> aggregator()
     {
-        return (PropertyAggregator<T, U>) aggregator;
+        return (FactAggregator<T, U>) aggregator;
     }
 }

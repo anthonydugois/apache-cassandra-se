@@ -26,7 +26,7 @@ import java.util.concurrent.PriorityBlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.ens.cassandra.se.state.property.Property;
+import fr.ens.cassandra.se.state.facts.Fact;
 import org.apache.cassandra.locator.InetAddressAndPort;
 
 public class EndpointState implements Runnable
@@ -35,7 +35,7 @@ public class EndpointState implements Runnable
 
     private final BlockingQueue<StateFeedback> queue = new PriorityBlockingQueue<>();
 
-    private final Map<Property, Object> values = new EnumMap<>(Property.class);
+    private final Map<Fact, Object> values = new EnumMap<>(Fact.class);
 
     private final InetAddressAndPort address;
 
@@ -51,13 +51,13 @@ public class EndpointState implements Runnable
         return address;
     }
 
-    public Object get(Property property)
+    public Object get(Fact fact)
     {
-        Object value = values.get(property);
+        Object value = values.get(fact);
 
         if (value == null)
         {
-            return property.aggregator().get();
+            return fact.aggregator().get();
         }
 
         return value;
@@ -91,13 +91,13 @@ public class EndpointState implements Runnable
 
                 if (feedback.timestamp() >= lastTimestamp)
                 {
-                    for (Map.Entry<Property, Object> entry : feedback.values().entrySet())
+                    for (Map.Entry<Fact, Object> entry : feedback.values().entrySet())
                     {
-                        Property property = entry.getKey();
+                        Fact fact = entry.getKey();
                         Object value = entry.getValue();
-                        Object current = get(property);
+                        Object current = get(fact);
 
-                        values.put(property, property.aggregator().apply(current, value));
+                        values.put(fact, fact.aggregator().apply(current, value));
                     }
 
                     lastTimestamp = feedback.timestamp();

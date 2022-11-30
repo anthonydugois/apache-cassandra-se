@@ -18,34 +18,7 @@
 
 package fr.ens.cassandra.se.local;
 
-import java.nio.charset.StandardCharsets;
-
-import org.apache.cassandra.db.ReadCommand;
-import org.apache.cassandra.db.SinglePartitionReadCommand;
-
-public class ReadCommandWrapper
+public interface ReadOperationProvider
 {
-    private final ReadCommand command;
-
-    private String key = null;
-
-    public ReadCommandWrapper(ReadCommand command)
-    {
-        this.command = command;
-
-        if (command instanceof SinglePartitionReadCommand)
-        {
-            this.key = new String(((SinglePartitionReadCommand) command).partitionKey().getKey().array(), StandardCharsets.UTF_8);
-        }
-    }
-
-    public ReadCommand getCommand()
-    {
-        return command;
-    }
-
-    public String getKey()
-    {
-        return key;
-    }
+    ReadOperation getReadOperation();
 }

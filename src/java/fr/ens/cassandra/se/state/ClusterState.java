@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import fr.ens.cassandra.se.state.property.Property;
+import fr.ens.cassandra.se.state.facts.Fact;
 import org.apache.cassandra.locator.InetAddressAndPort;
 import org.apache.cassandra.utils.FBUtilities;
 
@@ -63,7 +63,7 @@ public class ClusterState
         InetAddressAndPort address = FBUtilities.getLocalAddressAndPort();
         StateFeedback feedback = new StateFeedback();
 
-        feedback.put(Property.properties());
+        feedback.put(Fact.facts());
 
         state(address).add(feedback);
     }

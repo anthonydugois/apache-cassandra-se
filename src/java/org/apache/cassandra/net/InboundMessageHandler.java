@@ -26,8 +26,8 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.ens.cassandra.se.local.ReadCommandProvider;
-import fr.ens.cassandra.se.local.ReadCommandWrapper;
+import fr.ens.cassandra.se.local.ReadOperationProvider;
+import fr.ens.cassandra.se.local.ReadOperation;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import org.apache.cassandra.concurrent.ExecutorLocals;
@@ -402,7 +402,7 @@ public class InboundMessageHandler extends AbstractMessageHandler
         header.verb.stage.execute(ExecutorLocals.create(state), task);
     }
 
-    private abstract class ProcessMessage implements Runnable, ReadCommandProvider
+    private abstract class ProcessMessage implements Runnable, ReadOperationProvider
     {
         /**
          * Actually handle the message. Runs on the appropriate {@link Stage} for the {@link Verb}.
@@ -449,13 +449,13 @@ public class InboundMessageHandler extends AbstractMessageHandler
         }
 
         @Override
-        public ReadCommandWrapper getReadCommand()
+        public ReadOperation getReadOperation()
         {
             Message message = provideMessage();
 
             if (message != null && message.payload instanceof ReadCommand)
             {
-                return new ReadCommandWrapper((ReadCommand) message.payload);
+                return ReadOperation.from((ReadCommand) message.payload);
             }
 
             return null;
