@@ -1884,3 +1884,6 @@ replica_selector:
 
 local_read_queue:
   - class_name: fr.ens.cassandra.se.local.FIFOReadQueue
+
+state_feedback:
+  - COMPLETED_READS

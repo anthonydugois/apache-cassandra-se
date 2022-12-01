@@ -21,22 +21,21 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Supplier;
-
 import javax.annotation.Nullable;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import fr.ens.cassandra.se.state.facts.Fact;
 import org.apache.cassandra.audit.AuditLogOptions;
 import org.apache.cassandra.db.ConsistencyLevel;
 import org.apache.cassandra.fql.FullQueryLoggerOptions;
@@ -44,7 +43,7 @@ import org.apache.cassandra.service.StartupChecks.StartupCheckType;
 
 /**
  * A class that contains configuration properties for the cassandra node it runs within.
- *
+ * <p>
  * Properties declared as volatile can be mutated via JMX.
  */
 public class Config
@@ -65,6 +64,7 @@ public class Config
         }
         return builder.build();
     }
+
     /*
      * Prefix for Java properties for internal Cassandra configuration options
      */
@@ -118,9 +118,13 @@ public class Config
     /* initial token in the ring */
     public String initial_token;
     public Integer num_tokens;
-    /** Triggers automatic allocation of tokens if set, using the replication strategy of the referenced keyspace */
+    /**
+     * Triggers automatic allocation of tokens if set, using the replication strategy of the referenced keyspace
+     */
     public String allocate_tokens_for_keyspace = null;
-    /** Triggers automatic allocation of tokens if set, based on the provided replica count for a datacenter */
+    /**
+     * Triggers automatic allocation of tokens if set, based on the provided replica count for a datacenter
+     */
     public Integer allocate_tokens_for_local_replication_factor = null;
 
     @Replaces(oldName = "native_transport_idle_timeout_in_ms", converter = Converters.MILLIS_DURATION_LONG, deprecated = true)
@@ -221,7 +225,7 @@ public class Config
     public String broadcast_rpc_address;
     public boolean rpc_keepalive = true;
 
-    @Replaces(oldName = "internode_max_message_size_in_bytes", converter = Converters.BYTES_DATASTORAGE, deprecated=true)
+    @Replaces(oldName = "internode_max_message_size_in_bytes", converter = Converters.BYTES_DATASTORAGE, deprecated = true)
     public DataStorageSpec.IntBytesBound internode_max_message_size;
 
     @Replaces(oldName = "internode_socket_send_buffer_size_in_bytes", converter = Converters.BYTES_DATASTORAGE, deprecated = true)
@@ -267,7 +271,9 @@ public class Config
     public int native_transport_max_threads = 128;
     @Replaces(oldName = "native_transport_max_frame_size_in_mb", converter = Converters.MEBIBYTES_DATA_STORAGE_INT, deprecated = true)
     public DataStorageSpec.IntMebibytesBound native_transport_max_frame_size = new DataStorageSpec.IntMebibytesBound("16MiB");
-    /** do bcrypt hashing in a limited pool to prevent cpu load spikes; note: any value < 1 will be set to 1 on init **/
+    /**
+     * do bcrypt hashing in a limited pool to prevent cpu load spikes; note: any value < 1 will be set to 1 on init
+     **/
     public int native_transport_max_auth_threads = 4;
     public volatile long native_transport_max_concurrent_connections = -1L;
     public volatile long native_transport_max_concurrent_connections_per_ip = -1L;
@@ -523,9 +529,9 @@ public class Config
     public volatile DurationSpec.IntMillisecondsBound gc_warn_threshold = new DurationSpec.IntMillisecondsBound("1s");
 
     // TTL for different types of trace events.
-    @Replaces(oldName = "tracetype_query_ttl", converter = Converters.SECONDS_DURATION, deprecated=true)
+    @Replaces(oldName = "tracetype_query_ttl", converter = Converters.SECONDS_DURATION, deprecated = true)
     public DurationSpec.IntSecondsBound trace_type_query_ttl = new DurationSpec.IntSecondsBound("1d");
-    @Replaces(oldName = "tracetype_repair_ttl", converter = Converters.SECONDS_DURATION, deprecated=true)
+    @Replaces(oldName = "tracetype_repair_ttl", converter = Converters.SECONDS_DURATION, deprecated = true)
     public DurationSpec.IntSecondsBound trace_type_repair_ttl = new DurationSpec.IntSecondsBound("7d");
 
     /**
@@ -585,7 +591,7 @@ public class Config
      * "tell" a user that there's something really wrong with the UDF.
      * When you disable async UDF execution, users MUST pay attention to read-timeouts since these may indicate
      * UDFs that run too long or forever - and this can destabilize the cluster.
-     *
+     * <p>
      * This requires allow_insecure_udfs to be true
      */
     // Below parameter is not presented in cassandra.yaml but to be on the safe side that no one was directly using it
@@ -642,15 +648,15 @@ public class Config
      * Due to this, by default, Casssandra will prime these internode TCP connections and wait for all but a single
      * node to be DOWN/disconnected in the local datacenter before offering itself as a coordinator, subject to a
      * timeout. See CASSANDRA-13993 and CASSANDRA-14297 for more details.
-     *
+     * <p>
      * We provide two tunables to control this behavior as some users may want to block until all datacenters are
      * available (global QUORUM/EACH_QUORUM), some users may not want to block at all (clients that already work
      * around the problem), and some users may want to prime the connections but not delay startup.
-     *
+     * <p>
      * block_for_peers_timeout_in_secs: controls how long this node will wait to connect to peers. To completely disable
      * any startup connectivity checks set this to -1. To trigger the internode connections but immediately continue
      * startup, set this to to 0. The default is 10 seconds.
-     *
+     * <p>
      * block_for_peers_in_remote_dcs: controls if this node will consider remote datacenters to wait for. The default
      * is to _not_ wait on remote datacenters.
      */
@@ -714,7 +720,8 @@ public class Config
     public volatile String auth_read_consistency_level = "LOCAL_QUORUM";
     public volatile String auth_write_consistency_level = "EACH_QUORUM";
 
-    /** This feature allows denying access to operations on certain key partitions, intended for use by operators to
+    /**
+     * This feature allows denying access to operations on certain key partitions, intended for use by operators to
      * provide another tool to manage cluster health vs application access. See CASSANDRA-12106 and CEP-13 for more details.
      */
     public volatile boolean partition_denylist_enabled = false;
@@ -729,18 +736,21 @@ public class Config
 
     public DurationSpec.IntSecondsBound denylist_initial_load_retry = new DurationSpec.IntSecondsBound("5s");
 
-    /** We cap the number of denylisted keys allowed per table to keep things from growing unbounded. Operators will
+    /**
+     * We cap the number of denylisted keys allowed per table to keep things from growing unbounded. Operators will
      * receive warnings and only denylist_max_keys_per_table in natural query ordering will be processed on overflow.
      */
     public volatile int denylist_max_keys_per_table = 1000;
 
-    /** We cap the total number of denylisted keys allowed in the cluster to keep things from growing unbounded.
+    /**
+     * We cap the total number of denylisted keys allowed in the cluster to keep things from growing unbounded.
      * Operators will receive warnings on initial cache load that there are too many keys and be directed to trim
      * down the entries to within the configured limits.
      */
     public volatile int denylist_max_keys_total = 10000;
 
-    /** Since the denylist in many ways serves to protect the health of the cluster from partitions operators have identified
+    /**
+     * Since the denylist in many ways serves to protect the health of the cluster from partitions operators have identified
      * as being in a bad state, we usually want more robustness than just CL.ONE on operations to/from these tables to
      * ensure that these safeguards are in place. That said, we allow users to configure this if they're so inclined.
      */
@@ -770,7 +780,7 @@ public class Config
      * replica involved in the query, for compaction the snapshot will be created locally.
      * These are limited at the replica level so that only a single snapshot per-day can be taken
      * via this method.
-     *
+     * <p>
      * This requires check_for_duplicate_rows_during_reads and/or check_for_duplicate_rows_during_compaction
      * below to be enabled
      */
@@ -867,7 +877,9 @@ public class Config
     public volatile DurationSpec.LongNanosecondsBound streaming_state_expires = new DurationSpec.LongNanosecondsBound("3d");
     public volatile DataStorageSpec.LongBytesBound streaming_state_size = new DataStorageSpec.LongBytesBound("40MiB");
 
-    /** The configuration of startup checks. */
+    /**
+     * The configuration of startup checks.
+     */
     public volatile Map<StartupCheckType, Map<String, Object>> startup_checks = new HashMap<>();
 
     public volatile DurationSpec.LongNanosecondsBound repair_state_expires = new DurationSpec.LongNanosecondsBound("3d");
@@ -880,7 +892,7 @@ public class Config
     {
         /**
          * v1 Paxos lacks most optimisations. Expect 4RTs for a write and 2RTs for a read.
-         *
+         * <p>
          * With legacy semantics for read/read and rejected write linearizability, i.e. not guaranteed.
          */
         v1_without_linearizable_reads_or_rejected_writes,
@@ -893,7 +905,7 @@ public class Config
         /**
          * v2 Paxos. With PaxosStatePurging.repaired safe to use ANY Commit consistency.
          * Expect 2RTs for a write and 1RT for a read.
-         *
+         * <p>
          * With legacy semantics for read/read linearizability, i.e. not guaranteed.
          */
         v2_without_linearizable_reads,
@@ -901,7 +913,7 @@ public class Config
         /**
          * v2 Paxos. With PaxosStatePurging.repaired safe to use ANY Commit consistency.
          * Expect 2RTs for a write and 1RT for a read.
-         *
+         * <p>
          * With legacy semantics for read/read and rejected write linearizability, i.e. not guaranteed.
          */
         v2_without_linearizable_reads_or_rejected_writes,
@@ -916,10 +928,10 @@ public class Config
     /**
      * Select the kind of paxos state purging to use. Migration to repaired is recommended, but requires that
      * regular paxos repairs are performed (which by default run as part of incremental repair).
-     *
+     * <p>
      * Once migrated from legacy it is unsafe to return to legacy, but gc_grace mode may be used in its place
      * and performs a very similar cleanup process.
-     *
+     * <p>
      * Should only be modified once paxos_variant = v2.
      */
     public enum PaxosStatePurging
@@ -941,7 +953,7 @@ public class Config
          * Clears system.paxos records only once they are known to be persisted to a quorum of replica's base tables
          * through the use of paxos repair. Requires that regular paxos repairs are performed on the cluster
          * (which by default are included in incremental repairs if paxos_variant = v2).
-         *
+         * <p>
          * This setting permits the use of Commit consistency ANY or LOCAL_QUORUM without any loss of durability or consistency,
          * saving 1 RT.
          */
@@ -989,7 +1001,7 @@ public class Config
 
     /**
      * See {@link PaxosOnLinearizabilityViolation}.
-     *
+     * <p>
      * Default is to ignore, as applications may readily mix SERIAL and LOCAL_SERIAL and this is the most likely source
      * of linearizability violations. this facility should be activated only for debugging Cassandra or by power users
      * who are investigating their own application behaviour.
@@ -1146,7 +1158,8 @@ public class Config
         exception
     }
 
-    private static final Set<String> SENSITIVE_KEYS = new HashSet<String>() {{
+    private static final Set<String> SENSITIVE_KEYS = new HashSet<String>()
+    {{
         add("client_encryption_options");
         add("server_encryption_options");
     }};
@@ -1194,4 +1207,5 @@ public class Config
     public boolean advanced_scheduling = true;
     public ParameterizedClass replica_selector;
     public ParameterizedClass local_read_queue;
+    public Set<Fact> state_feedback;
 }

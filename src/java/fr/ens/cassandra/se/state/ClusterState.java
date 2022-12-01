@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import fr.ens.cassandra.se.state.facts.Fact;
+import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.locator.InetAddressAndPort;
 import org.apache.cassandra.utils.FBUtilities;
 
@@ -63,7 +64,7 @@ public class ClusterState
         InetAddressAndPort address = FBUtilities.getLocalAddressAndPort();
         StateFeedback feedback = new StateFeedback();
 
-        feedback.put(Fact.facts());
+        feedback.put(DatabaseDescriptor.getStateFeedbackFacts());
 
         state(address).add(feedback);
     }

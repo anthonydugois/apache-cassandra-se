@@ -19,7 +19,6 @@
 package fr.ens.cassandra.se.state.facts;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.apache.cassandra.concurrent.Stage;
 import org.apache.cassandra.db.TypeSizes;
@@ -77,8 +76,6 @@ public enum Fact
     private final FactMeasure measure;
     private final FactAggregator aggregator;
 
-    private static final List<Fact> facts = List.of(COMPLETED_READS);
-
     private static final Fact[] ID_TO_FACT;
 
     static
@@ -112,11 +109,6 @@ public enum Fact
         this.serializer = serializer;
         this.measure = measure;
         this.aggregator = aggregator;
-    }
-
-    public static List<Fact> facts()
-    {
-        return facts;
     }
 
     public static Fact fromId(int id)

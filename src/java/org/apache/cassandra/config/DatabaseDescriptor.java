@@ -61,6 +61,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.ens.cassandra.se.local.IReadQueue;
+import fr.ens.cassandra.se.state.facts.Fact;
 import org.apache.cassandra.audit.AuditLogOptions;
 import org.apache.cassandra.auth.AllowAllInternodeAuthenticator;
 import org.apache.cassandra.auth.AuthConfig;
@@ -1737,6 +1738,11 @@ public class DatabaseDescriptor
     public static IReadQueue getReadQueue()
     {
         return readQueue;
+    }
+
+    public static Set<Fact> getStateFeedbackFacts()
+    {
+        return conf.state_feedback;
     }
 
     public static IFailureDetector newFailureDetector()
