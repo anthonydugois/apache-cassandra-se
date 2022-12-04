@@ -26,13 +26,13 @@ import org.apache.cassandra.locator.IEndpointSnitch;
 import org.apache.cassandra.locator.InetAddressAndPort;
 import org.apache.cassandra.locator.ReplicaCollection;
 
-public abstract class ReplicaSelector extends AbstractEndpointSnitch
+public abstract class AbstractSelector extends AbstractEndpointSnitch
 {
     protected final IEndpointSnitch snitch;
 
     protected final Map<String, String> parameters;
 
-    protected ReplicaSelector(IEndpointSnitch snitch, Map<String, String> parameters)
+    protected AbstractSelector(IEndpointSnitch snitch, Map<String, String> parameters)
     {
         this.snitch = snitch;
         this.parameters = parameters;

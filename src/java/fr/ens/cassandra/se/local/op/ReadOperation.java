@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package fr.ens.cassandra.se.local;
+package fr.ens.cassandra.se.local.op;
 
 import java.nio.charset.StandardCharsets;
 

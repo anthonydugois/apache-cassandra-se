@@ -16,10 +16,11 @@
  * limitations under the License.
  */
 
-package fr.ens.cassandra.se.local;
+package fr.ens.cassandra.se.oracle;
 
-import java.util.AbstractQueue;
-
-public abstract class AbstractReadQueue<E> extends AbstractQueue<E> implements IReadQueue<E>
+public interface Oracle<K, V>
 {
+    void init();
+
+    V get(K key);
 }

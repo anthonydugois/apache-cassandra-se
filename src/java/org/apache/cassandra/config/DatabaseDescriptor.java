@@ -60,7 +60,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.ens.cassandra.se.local.IReadQueue;
+import fr.ens.cassandra.se.local.read.ReadQueue;
 import fr.ens.cassandra.se.state.facts.Fact;
 import org.apache.cassandra.audit.AuditLogOptions;
 import org.apache.cassandra.auth.AllowAllInternodeAuthenticator;
@@ -196,7 +196,7 @@ public class DatabaseDescriptor
                                                                                                            ? new CommitLogSegmentManagerCDC(c, DatabaseDescriptor.getCommitLogLocation())
                                                                                                            : new CommitLogSegmentManagerStandard(c, DatabaseDescriptor.getCommitLogLocation());
 
-    private static IReadQueue readQueue;
+    private static ReadQueue readQueue;
 
     public static void daemonInitialization() throws ConfigurationException
     {
@@ -1421,7 +1421,7 @@ public class DatabaseDescriptor
         }
     }
 
-    public static IReadQueue createAdvancedReadQueue(ParameterizedClass queue) throws ConfigurationException
+    public static ReadQueue createAdvancedReadQueue(ParameterizedClass queue) throws ConfigurationException
     {
         try
         {
@@ -1434,7 +1434,7 @@ public class DatabaseDescriptor
                 queueParameters = new HashMap<>(); // avoid null pointer
             }
 
-            return (IReadQueue) queueConstructor.newInstance(queueParameters);
+            return (ReadQueue) queueConstructor.newInstance(queueParameters);
         }
         catch (ClassNotFoundException |
                NoSuchMethodException |
@@ -1735,7 +1735,7 @@ public class DatabaseDescriptor
         snitch = eps;
     }
 
-    public static IReadQueue getReadQueue()
+    public static ReadQueue getReadQueue()
     {
         return readQueue;
     }

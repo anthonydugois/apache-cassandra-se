@@ -46,7 +46,7 @@ import org.apache.cassandra.net.LatencySubscribers;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.service.StorageService;
 
-public class DynamicSnitchingSelector extends ReplicaSelector implements LatencySubscribers.Subscriber
+public class DynamicSnitchingSelector extends AbstractSelector implements LatencySubscribers.Subscriber
 {
     private static final Logger logger = LoggerFactory.getLogger(DynamicSnitchingSelector.class);
 

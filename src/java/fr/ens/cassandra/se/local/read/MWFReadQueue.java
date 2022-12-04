@@ -16,22 +16,19 @@
  * limitations under the License.
  */
 
-package fr.ens.cassandra.se.local;
+package fr.ens.cassandra.se.local.read;
 
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FIFOReadQueue extends LocalReadQueue<Runnable>
+public class MWFReadQueue extends AbstractReadQueue<Runnable>
 {
-    private static final Logger logger = LoggerFactory.getLogger(FIFOReadQueue.class);
+    private static final Logger logger = LoggerFactory.getLogger(MWFReadQueue.class);
 
-    private final ConcurrentLinkedQueue<Runnable> queue = new ConcurrentLinkedQueue<>();
-
-    public FIFOReadQueue(Map<String, String> parameters)
+    public MWFReadQueue(Map<String, String> parameters)
     {
         super(parameters);
     }
@@ -51,18 +48,18 @@ public class FIFOReadQueue extends LocalReadQueue<Runnable>
     @Override
     public boolean offer(Runnable runnable)
     {
-        return queue.offer(runnable);
+        return false;
     }
 
     @Override
     public Runnable poll()
     {
-        return queue.poll();
+        return null;
     }
 
     @Override
     public Runnable peek()
     {
-        return queue.peek();
+        return null;
     }
 }

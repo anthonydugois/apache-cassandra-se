@@ -16,39 +16,53 @@
  * limitations under the License.
  */
 
-package fr.ens.cassandra.se.selector;
+package fr.ens.cassandra.se.local.read;
 
+import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.cassandra.locator.IEndpointSnitch;
-import org.apache.cassandra.locator.InetAddressAndPort;
-import org.apache.cassandra.locator.Replica;
-
-public class LocalPrimarySelector extends AbstractSelector
+public class FIFOReadQueue extends AbstractReadQueue<Runnable>
 {
-    private static final Logger logger = LoggerFactory.getLogger(LocalPrimarySelector.class);
+    private static final Logger logger = LoggerFactory.getLogger(FIFOReadQueue.class);
 
-    public LocalPrimarySelector(IEndpointSnitch snitch, Map<String, String> parameters)
+    private final ConcurrentLinkedQueue<Runnable> queue = new ConcurrentLinkedQueue<>();
+
+    public FIFOReadQueue(Map<String, String> parameters)
     {
-        super(snitch, parameters);
+        super(parameters);
     }
 
     @Override
-    public int compareEndpoints(InetAddressAndPort target, Replica r1, Replica r2)
+    public Iterator<Runnable> iterator()
     {
-        if (r1.endpoint().equals(target))
-        {
-            return -1;
-        }
+        throw new UnsupportedOperationException();
+    }
 
-        if (r2.endpoint().equals(target))
-        {
-            return 1;
-        }
+    @Override
+    public int size()
+    {
+        throw new UnsupportedOperationException();
+    }
 
-        return snitch.compareEndpoints(target, r1, r2);
+    @Override
+    public boolean offer(Runnable runnable)
+    {
+        return queue.offer(runnable);
+    }
+
+    @Override
+    public Runnable poll()
+    {
+        return queue.poll();
+    }
+
+    @Override
+    public Runnable peek()
+    {
+        return queue.peek();
     }
 }

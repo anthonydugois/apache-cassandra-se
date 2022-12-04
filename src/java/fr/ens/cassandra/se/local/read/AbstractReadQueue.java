@@ -16,50 +16,22 @@
  * limitations under the License.
  */
 
-package fr.ens.cassandra.se.local;
+package fr.ens.cassandra.se.local.read;
 
-import java.util.Iterator;
+import java.util.AbstractQueue;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-public class MWFReadQueue extends LocalReadQueue<Runnable>
+public abstract class AbstractReadQueue<E> extends AbstractQueue<E> implements ReadQueue<E>
 {
-    private static final Logger logger = LoggerFactory.getLogger(MWFReadQueue.class);
+    protected final Map<String, String> parameters;
 
-    public MWFReadQueue(Map<String, String> parameters)
+    protected AbstractReadQueue(Map<String, String> parameters)
     {
-        super(parameters);
+        this.parameters = parameters;
     }
 
-    @Override
-    public Iterator<Runnable> iterator()
+    public Map<String, String> getParameters()
     {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public int size()
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean offer(Runnable runnable)
-    {
-        return false;
-    }
-
-    @Override
-    public Runnable poll()
-    {
-        return null;
-    }
-
-    @Override
-    public Runnable peek()
-    {
-        return null;
+        return parameters;
     }
 }

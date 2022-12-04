@@ -18,6 +18,9 @@
 
 package fr.ens.cassandra.se.local;
 
+import fr.ens.cassandra.se.local.op.ReadOperation;
+import fr.ens.cassandra.se.local.op.ReadOperationProvider;
+
 public abstract class LocalTask implements Runnable
 {
     private final Runnable runnable;

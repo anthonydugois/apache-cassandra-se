@@ -1883,7 +1883,7 @@ replica_selector:
   - class_name: fr.ens.cassandra.se.selector.DynamicSnitchingSelector
 
 local_read_queue:
-  - class_name: fr.ens.cassandra.se.local.FIFOReadQueue
+  - class_name: fr.ens.cassandra.se.local.read.FIFOReadQueue
 
 state_feedback:
   - COMPLETED_READS

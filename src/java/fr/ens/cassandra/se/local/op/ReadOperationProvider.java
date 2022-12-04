@@ -16,21 +16,9 @@
  * limitations under the License.
  */
 
-package fr.ens.cassandra.se.local;
+package fr.ens.cassandra.se.local.op;
 
-import java.util.Map;
-
-public abstract class LocalReadQueue<E> extends AbstractReadQueue<E>
+public interface ReadOperationProvider
 {
-    protected final Map<String, String> parameters;
-
-    protected LocalReadQueue(Map<String, String> parameters)
-    {
-        this.parameters = parameters;
-    }
-
-    public Map<String, String> getParameters()
-    {
-        return parameters;
-    }
+    ReadOperation getReadOperation();
 }

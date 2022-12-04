@@ -16,9 +16,21 @@
  * limitations under the License.
  */
 
-package fr.ens.cassandra.se.local;
+package fr.ens.cassandra.se.oracle;
 
-public interface ReadOperationProvider
+import java.util.Map;
+
+public abstract class AbstractOracle<K, V> implements Oracle<K, V>
 {
-    ReadOperation getReadOperation();
+    private final Map<String, String> parameters;
+
+    protected AbstractOracle(Map<String, String> parameters)
+    {
+        this.parameters = parameters;
+    }
+
+    public Map<String, String> getParameters()
+    {
+        return parameters;
+    }
 }

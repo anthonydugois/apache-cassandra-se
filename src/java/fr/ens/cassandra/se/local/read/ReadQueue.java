@@ -16,10 +16,10 @@
  * limitations under the License.
  */
 
-package fr.ens.cassandra.se.local;
+package fr.ens.cassandra.se.local.read;
 
 import java.util.Queue;
 
-public interface IReadQueue<E> extends Queue<E>
+public interface ReadQueue<E> extends Queue<E>
 {
 }

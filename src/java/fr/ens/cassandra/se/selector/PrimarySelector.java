@@ -27,7 +27,7 @@ import org.apache.cassandra.locator.IEndpointSnitch;
 import org.apache.cassandra.locator.InetAddressAndPort;
 import org.apache.cassandra.locator.Replica;
 
-public class PrimarySelector extends ReplicaSelector
+public class PrimarySelector extends AbstractSelector
 {
     private static final Logger logger = LoggerFactory.getLogger(PrimarySelector.class);
 
