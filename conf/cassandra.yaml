@@ -1885,5 +1885,9 @@ replica_selector:
 local_read_queue:
   - class_name: fr.ens.cassandra.se.local.read.FIFOReadQueue
 
+oracles:
+  size:
+    - class_name: fr.ens.cassandra.se.oracle.KeySizeOracle
+
 state_feedback:
-  - COMPLETED_READS
+  -

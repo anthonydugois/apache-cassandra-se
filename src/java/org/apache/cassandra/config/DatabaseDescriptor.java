@@ -46,7 +46,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
-
 import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -61,6 +60,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.ens.cassandra.se.local.read.ReadQueue;
+import fr.ens.cassandra.se.oracle.Oracle;
 import fr.ens.cassandra.se.state.facts.Fact;
 import org.apache.cassandra.audit.AuditLogOptions;
 import org.apache.cassandra.auth.AllowAllInternodeAuthenticator;
@@ -198,6 +198,8 @@ public class DatabaseDescriptor
 
     private static ReadQueue readQueue;
 
+    private static Map<String, Oracle> oracles;
+
     public static void daemonInitialization() throws ConfigurationException
     {
         daemonInitialization(DatabaseDescriptor::loadConfig);
@@ -263,6 +265,8 @@ public class DatabaseDescriptor
         applySnitch();
 
         applyReadQueue();
+
+        applyOracles();
 
         applyEncryptionContext();
     }
@@ -399,6 +403,8 @@ public class DatabaseDescriptor
         applySnitch();
 
         applyReadQueue();
+
+        applyOracles();
 
         applyTokensConfig();
 
@@ -1338,6 +1344,19 @@ public class DatabaseDescriptor
         }
     }
 
+    public static void applyOracles()
+    {
+        if (conf.advanced_scheduling)
+        {
+            if (conf.oracles == null)
+            {
+                throw new ConfigurationException("Missing oracles directive", false);
+            }
+
+            oracles = createAdvancedOracles(conf.oracles);
+        }
+    }
+
     // definitely not safe for tools + clients - implicitly instantiates schema
     public static void applyPartitioner()
     {
@@ -1435,6 +1454,41 @@ public class DatabaseDescriptor
             }
 
             return (ReadQueue) queueConstructor.newInstance(queueParameters);
+        }
+        catch (ClassNotFoundException |
+               NoSuchMethodException |
+               InstantiationException |
+               IllegalAccessException |
+               InvocationTargetException exception)
+        {
+            throw new ConfigurationException("Unable to instantiate local read queue", exception);
+        }
+    }
+
+    public static Map<String, Oracle> createAdvancedOracles(Map<String, ParameterizedClass> oracles) throws ConfigurationException
+    {
+        try
+        {
+            Map<String, Oracle> map = new HashMap<>();
+
+            for (Map.Entry<String, ParameterizedClass> entry : oracles.entrySet())
+            {
+                String key = entry.getKey();
+                ParameterizedClass oracle = entry.getValue();
+
+                Class<?> oracleClass = Class.forName(oracle.class_name);
+                Constructor<?> oracleConstructor = oracleClass.getConstructor(Map.class);
+                Map<String, String> oracleParameters = oracle.parameters;
+
+                if (oracleParameters == null)
+                {
+                    oracleParameters = new HashMap<>(); // avoid null pointer
+                }
+
+                map.put(key, (Oracle) oracleConstructor.newInstance(oracleParameters));
+            }
+
+            return map;
         }
         catch (ClassNotFoundException |
                NoSuchMethodException |
@@ -1738,6 +1792,16 @@ public class DatabaseDescriptor
     public static ReadQueue getReadQueue()
     {
         return readQueue;
+    }
+
+    public static Map<String, Oracle> getOracles()
+    {
+        return oracles;
+    }
+
+    public static <K, V> Oracle<K, V> getOracle(String key)
+    {
+        return (Oracle<K, V>) oracles.get(key);
     }
 
     public static Set<Fact> getStateFeedbackFacts()

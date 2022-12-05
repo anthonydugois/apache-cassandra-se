@@ -23,7 +23,7 @@ import java.util.Map;
 import fr.ens.cassandra.se.op.ReadOperation;
 import fr.ens.cassandra.se.op.info.Info;
 import fr.ens.cassandra.se.oracle.Oracle;
-import fr.ens.cassandra.se.oracle.Oracles;
+import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.db.SinglePartitionReadCommand;
 import org.apache.cassandra.locator.IEndpointSnitch;
 import org.apache.cassandra.locator.InetAddressAndPort;
@@ -31,18 +31,32 @@ import org.apache.cassandra.locator.ReplicaCollection;
 
 public class PriorityDynamicSnitchingSelector extends DynamicSnitchingSelector
 {
+    private static final String THRESHOLD_PROPERTY = "threshold";
+    private static final String DEFAULT_THRESHOLD_PROPERTY = "1024";
+
+    private final int threshold;
+
     public PriorityDynamicSnitchingSelector(IEndpointSnitch snitch, Map<String, String> parameters)
     {
         super(snitch, parameters);
+
+        this.threshold = Integer.parseInt(parameters.getOrDefault(THRESHOLD_PROPERTY, DEFAULT_THRESHOLD_PROPERTY));
     }
 
     @Override
     public <C extends ReplicaCollection<? extends C>> C sortedByProximity(InetAddressAndPort address, C unsortedAddress, ReadOperation<SinglePartitionReadCommand> operation)
     {
-        Oracle<String, Integer> oracle = Oracles.instance.get("size");
+        Oracle<String, Integer> oracle = DatabaseDescriptor.getOracle("size");
         int size = oracle.get(operation.key());
 
-        operation.add(Info.PRIORITY, size);
+        if (size <= threshold)
+        {
+            operation.add(Info.PRIORITY, 0);
+        }
+        else
+        {
+            operation.add(Info.PRIORITY, 1);
+        }
 
         return super.sortedByProximity(address, unsortedAddress);
     }

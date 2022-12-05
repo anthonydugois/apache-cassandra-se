@@ -1199,13 +1199,13 @@ public class Config
     public volatile boolean dump_heap_on_uncaught_exception = false;
     public String heap_dump_path = "heapdump";
 
-    /* ============================================ */
-    /* === Apache Cassandra: Scheduling Edition === */
-    /* ============================================ */
+    /* ======================== */
+    /* === Hector extension === */
+    /* ======================== */
 
-    // Toggle advanced scheduling features
     public boolean advanced_scheduling = true;
     public ParameterizedClass replica_selector;
     public ParameterizedClass local_read_queue;
     public Set<Fact> state_feedback;
+    public Map<String, ParameterizedClass> oracles;
 }

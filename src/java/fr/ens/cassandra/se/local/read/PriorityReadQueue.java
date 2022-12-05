@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import fr.ens.cassandra.se.local.LocalTask;
 import fr.ens.cassandra.se.op.ReadOperation;
+import fr.ens.cassandra.se.op.info.Info;
 import org.apache.cassandra.db.ReadCommand;
 
 public class PriorityReadQueue extends AbstractReadQueue<Runnable>
@@ -61,11 +62,7 @@ public class PriorityReadQueue extends AbstractReadQueue<Runnable>
         if (runnable instanceof LocalTask.ReadTask)
         {
             ReadOperation op = ((LocalTask.ReadTask) runnable).getReadOperation();
-            ReadCommand command = op.command();
-
-            // retrieve priority data from command and insert it in queue
-            // int priority = command.get("priority")
-            priority = 0;
+            priority = (int) op.info(Info.PRIORITY);
         }
 
         return queue.offer(new Ordered<>(priority, runnable));
