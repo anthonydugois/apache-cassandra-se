@@ -29,8 +29,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.ens.cassandra.se.local.LocalTask;
-import fr.ens.cassandra.se.local.op.ReadOperation;
-import org.apache.cassandra.db.ReadCommand;
+import fr.ens.cassandra.se.op.ReadOperation;
+import fr.ens.cassandra.se.op.info.Info;
 
 public class MultilevelReadQueue extends AbstractReadQueue<Runnable>
 {
@@ -78,11 +78,7 @@ public class MultilevelReadQueue extends AbstractReadQueue<Runnable>
         if (runnable instanceof LocalTask.ReadTask)
         {
             ReadOperation op = ((LocalTask.ReadTask) runnable).getReadOperation();
-            ReadCommand command = op.command();
-
-            // retrieve priority data from command and insert it in corresponding queue
-            // int priority = command.get("priority")
-            int priority = 0;
+            int priority = (int) op.info(Info.PRIORITY);
 
             queue = queues.get(priority);
         }

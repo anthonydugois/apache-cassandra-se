@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 
-package fr.ens.cassandra.se.local.op;
+package fr.ens.cassandra.se.op.info;
 
-public interface ReadOperationProvider
+import org.apache.cassandra.io.IVersionedSerializer;
+
+public interface InfoSerializer<T> extends IVersionedSerializer<T>
 {
-    ReadOperation getReadOperation();
 }

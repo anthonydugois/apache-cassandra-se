@@ -16,41 +16,29 @@
  * limitations under the License.
  */
 
-package fr.ens.cassandra.se.local.op;
+package fr.ens.cassandra.se.oracle;
 
-import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.apache.cassandra.db.ReadCommand;
-import org.apache.cassandra.db.SinglePartitionReadCommand;
-
-public class ReadOperation<T extends ReadCommand>
+/**
+ * This is a simple registry to avoid strong coupling between oracles and classes that make use of them. The main goal
+ * is to allow the user to bind any oracle to a specific key; in this way, one may change the used oracle implementation
+ * in scheduling algorithms directly from main configuration.
+ */
+public class Oracles
 {
-    private final T command;
+    public static final Oracles instance = new Oracles();
 
-    private String key = null;
+    private final Map<String, Oracle> oracles = new HashMap<>();
 
-    public ReadOperation(T command)
+    public <K, V> void register(String key, Oracle<K, V> oracle)
     {
-        this.command = command;
-
-        if (command instanceof SinglePartitionReadCommand)
-        {
-            this.key = new String(((SinglePartitionReadCommand) command).partitionKey().getKey().array(), StandardCharsets.UTF_8);
-        }
+        oracles.put(key, oracle);
     }
 
-    public static <T extends ReadCommand> ReadOperation<T> from(T command)
+    public <K, V> Oracle<K, V> get(String key)
     {
-        return new ReadOperation<>(command);
-    }
-
-    public T command()
-    {
-        return command;
-    }
-
-    public String key()
-    {
-        return key;
+        return (Oracle<K, V>) oracles.get(key);
     }
 }

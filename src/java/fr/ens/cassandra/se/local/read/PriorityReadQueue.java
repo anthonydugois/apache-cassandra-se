@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.ens.cassandra.se.local.LocalTask;
-import fr.ens.cassandra.se.local.op.ReadOperation;
+import fr.ens.cassandra.se.op.ReadOperation;
 import org.apache.cassandra.db.ReadCommand;
 
 public class PriorityReadQueue extends AbstractReadQueue<Runnable>

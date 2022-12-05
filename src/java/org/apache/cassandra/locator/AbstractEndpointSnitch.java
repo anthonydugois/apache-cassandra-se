@@ -19,7 +19,7 @@ package org.apache.cassandra.locator;
 
 import com.google.common.collect.Iterables;
 
-import fr.ens.cassandra.se.local.op.ReadOperation;
+import fr.ens.cassandra.se.op.ReadOperation;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.db.SinglePartitionReadCommand;
 

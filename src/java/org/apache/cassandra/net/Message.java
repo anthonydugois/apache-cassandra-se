@@ -885,6 +885,7 @@ public class Message<T>
             Header header = deserializeHeaderPost40(in, peer, version);
             skipUnsignedVInt(in); // payload size, not needed by payload deserializer
             T payload = (T) header.verb.serializer().deserialize(in, version);
+
             StateFeedback feedback = StateFeedback.serializer.deserialize(in, version);
 
             Message<T> message = new Message<>(header, payload);

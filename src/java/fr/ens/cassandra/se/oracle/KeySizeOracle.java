@@ -18,73 +18,31 @@
 
 package fr.ens.cassandra.se.oracle;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 
-import fr.ens.cassandra.se.oracle.loader.CachedPathLoader;
-import org.apache.cassandra.concurrent.ScheduledExecutors;
-
+/**
+ * This oracle infers key size from a partition key that has the following form: {size}_{id}, where {size} corresponds
+ * to the number of bytes of the associated value, and {id} is a unique identifier.
+ *
+ * This oracle has two advantages over CSVKeySizeOracle:
+ * - no additional memory is needed;
+ * - write-after-rampup operations are automatically handled (no need to update the key-size memory map).
+ *
+ * Unless there is a need to perform specific calculations over the full set of data (for example, computing some
+ * statistics), this oracle should be prefered over CSVKeySizeOracle.
+ */
 public class KeySizeOracle extends AbstractOracle<String, Integer>
 {
-    public static final String DIR_PROPERTY = "dir";
-    public static final String DEFAULT_DIR_PROPERTY = "/";
-
-    public static final String GLOB_PROPERTY = "glob";
-    public static final String DEFAULT_GLOB_PROPERTY = "*";
-
-    public static final String DELAY_PROPERTY = "delay";
-    public static final String DEFAULT_DELAY_PROPERTY = "10";
-
-    private final long delay;
-
-    private final CachedPathLoader loader;
-
-    private final Map<String, Integer> sizes = new HashMap<>();
-
     public KeySizeOracle(Map<String, String> parameters)
     {
         super(parameters);
-
-        String dir = parameters.getOrDefault(DIR_PROPERTY, DEFAULT_DIR_PROPERTY);
-        String glob = parameters.getOrDefault(GLOB_PROPERTY, DEFAULT_GLOB_PROPERTY);
-
-        this.delay = Long.parseLong(parameters.getOrDefault(DELAY_PROPERTY, DEFAULT_DELAY_PROPERTY));
-
-        this.loader = new CachedPathLoader(dir, glob);
-    }
-
-    private void load()
-    {
-        for (Path path : loader.getPaths())
-        {
-            try (Stream<String> lines = Files.lines(path))
-            {
-                lines.forEach((line) -> {
-                    String[] cells = line.split(",", 2);
-                    sizes.put(cells[0], Integer.parseInt(cells[1]));
-                });
-            }
-            catch (IOException exception)
-            {
-                // ignored
-            }
-        }
-    }
-
-    @Override
-    public void init()
-    {
-        ScheduledExecutors.scheduledTasks.scheduleWithFixedDelay(this::load, 0, delay, TimeUnit.SECONDS);
     }
 
     @Override
     public Integer get(String key)
     {
-        return sizes.get(key);
+        String[] values = key.split("_", 2);
+
+        return Integer.parseInt(values[0]);
     }
 }

@@ -20,7 +20,7 @@ package org.apache.cassandra.locator;
 import java.net.InetSocketAddress;
 import java.util.Set;
 
-import fr.ens.cassandra.se.local.op.ReadOperation;
+import fr.ens.cassandra.se.op.ReadOperation;
 import org.apache.cassandra.db.SinglePartitionReadCommand;
 import org.apache.cassandra.utils.FBUtilities;
 

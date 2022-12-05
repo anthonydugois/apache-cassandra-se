@@ -20,7 +20,7 @@ package org.apache.cassandra.locator;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import fr.ens.cassandra.se.local.op.ReadOperation;
+import fr.ens.cassandra.se.op.ReadOperation;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.db.Keyspace;
 import org.apache.cassandra.db.PartitionPosition;
