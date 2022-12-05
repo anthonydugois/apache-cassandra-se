@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.slf4j.Logger;
@@ -41,7 +40,7 @@ public class MultilevelReadQueue extends AbstractReadQueue<Runnable>
 
     private final int levels;
 
-    private final List<Queue<Runnable>> queues;
+    private final List<ConcurrentLinkedQueue<Runnable>> queues;
 
     public MultilevelReadQueue(Map<String, String> parameters)
     {
@@ -52,7 +51,7 @@ public class MultilevelReadQueue extends AbstractReadQueue<Runnable>
 
         for (int i = 0; i < this.levels; ++i)
         {
-            Queue<Runnable> queue = new ConcurrentLinkedQueue<>();
+            ConcurrentLinkedQueue<Runnable> queue = new ConcurrentLinkedQueue<>();
 
             queues.set(i, queue);
         }
@@ -73,7 +72,7 @@ public class MultilevelReadQueue extends AbstractReadQueue<Runnable>
     @Override
     public boolean offer(Runnable runnable)
     {
-        Queue<Runnable> queue = queues.get(levels - 1);
+        ConcurrentLinkedQueue<Runnable> queue = queues.get(levels - 1);
 
         if (runnable instanceof LocalTask.ReadTask)
         {
@@ -89,7 +88,7 @@ public class MultilevelReadQueue extends AbstractReadQueue<Runnable>
     @Override
     public Runnable poll()
     {
-        for (Queue<Runnable> queue : queues)
+        for (ConcurrentLinkedQueue<Runnable> queue : queues)
         {
             if (!queue.isEmpty())
             {
@@ -103,7 +102,7 @@ public class MultilevelReadQueue extends AbstractReadQueue<Runnable>
     @Override
     public Runnable peek()
     {
-        for (Queue<Runnable> queue : queues)
+        for (ConcurrentLinkedQueue<Runnable> queue : queues)
         {
             if (!queue.isEmpty())
             {

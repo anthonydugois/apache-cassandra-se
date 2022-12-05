@@ -20,7 +20,6 @@ package fr.ens.cassandra.se.local.read;
 
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Queue;
 import java.util.concurrent.PriorityBlockingQueue;
 
 import org.slf4j.Logger;
@@ -29,13 +28,12 @@ import org.slf4j.LoggerFactory;
 import fr.ens.cassandra.se.local.LocalTask;
 import fr.ens.cassandra.se.op.ReadOperation;
 import fr.ens.cassandra.se.op.info.Info;
-import org.apache.cassandra.db.ReadCommand;
 
 public class PriorityReadQueue extends AbstractReadQueue<Runnable>
 {
     private static final Logger logger = LoggerFactory.getLogger(PriorityReadQueue.class);
 
-    private final Queue<Ordered<Runnable>> queue = new PriorityBlockingQueue<>();
+    private final PriorityBlockingQueue<Ordered<Runnable>> queue = new PriorityBlockingQueue<>();
 
     public PriorityReadQueue(Map<String, String> parameters)
     {
