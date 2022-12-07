@@ -55,6 +55,11 @@ public class ReadOperation<T extends ReadCommand>
         return key;
     }
 
+    public boolean has(Info info)
+    {
+        return command.infos().has(info);
+    }
+
     public Object info(Info info)
     {
         return command.infos().get(info);

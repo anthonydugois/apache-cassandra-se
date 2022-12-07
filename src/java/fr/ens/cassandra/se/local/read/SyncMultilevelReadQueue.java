@@ -19,9 +19,11 @@
 package fr.ens.cassandra.se.local.read;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,15 +32,29 @@ import fr.ens.cassandra.se.local.LocalTask;
 import fr.ens.cassandra.se.op.ReadOperation;
 import fr.ens.cassandra.se.op.info.Info;
 
-public class PriorityReadQueue extends AbstractReadQueue<Runnable>
+public class SyncMultilevelReadQueue extends AbstractReadQueue<Runnable>
 {
-    private static final Logger logger = LoggerFactory.getLogger(PriorityReadQueue.class);
+    private static final Logger logger = LoggerFactory.getLogger(SyncMultilevelReadQueue.class);
 
-    private final PriorityBlockingQueue<OrderedValue<Runnable>> queue = Queues.newPriorityBlockingQueue();
+    private static final String LEVELS_PROPERTY = "levels";
+    private static final String DEFAULT_LEVELS_PROPERTY = "10";
 
-    public PriorityReadQueue(Map<String, String> parameters)
+    private final int levels;
+
+    private final List<ConcurrentLinkedQueue<Runnable>> queues;
+
+    public SyncMultilevelReadQueue(Map<String, String> parameters)
     {
         super(parameters);
+
+        this.levels = Integer.parseInt(parameters.getOrDefault(LEVELS_PROPERTY, DEFAULT_LEVELS_PROPERTY));
+
+        this.queues = Lists.newArrayListWithCapacity(this.levels);
+
+        for (int i = 0; i < this.levels; ++i)
+        {
+            queues.add(Queues.newConcurrentLinkedQueue());
+        }
     }
 
     @Override
@@ -54,9 +70,9 @@ public class PriorityReadQueue extends AbstractReadQueue<Runnable>
     }
 
     @Override
-    public boolean offer(Runnable runnable)
+    public synchronized boolean offer(Runnable runnable)
     {
-        int priority = Integer.MAX_VALUE;
+        ConcurrentLinkedQueue<Runnable> queue = queues.get(levels - 1);
 
         if (runnable instanceof LocalTask.ReadTask)
         {
@@ -64,69 +80,44 @@ public class PriorityReadQueue extends AbstractReadQueue<Runnable>
 
             if (op != null && op.has(Info.PRIORITY))
             {
-                priority = (int) op.info(Info.PRIORITY);
+                int priority = (int) op.info(Info.PRIORITY);
+
+                queue = queues.get(priority);
             }
         }
 
-        return queue.offer(OrderedValue.newOrderedValue(priority, runnable));
+        return queue.offer(runnable);
     }
 
     @Override
-    public Runnable poll()
+    public synchronized Runnable poll()
     {
-        OrderedValue<Runnable> ordered = queue.poll();
-
-        if (ordered != null)
+        for (ConcurrentLinkedQueue<Runnable> queue : queues)
         {
-            return ordered.getElement();
+            Runnable runnable = queue.poll();
+
+            if (runnable != null)
+            {
+                return runnable;
+            }
         }
 
         return null;
     }
 
     @Override
-    public Runnable peek()
+    public synchronized Runnable peek()
     {
-        OrderedValue<Runnable> ordered = queue.peek();
-
-        if (ordered != null)
+        for (ConcurrentLinkedQueue<Runnable> queue : queues)
         {
-            return ordered.getElement();
+            Runnable runnable = queue.peek();
+
+            if (runnable != null)
+            {
+                return runnable;
+            }
         }
 
         return null;
-    }
-
-    public static class OrderedValue<T> implements Comparable<OrderedValue<T>>
-    {
-        private final int priority;
-        private final T element;
-
-        public OrderedValue(int priority, T element)
-        {
-            this.priority = priority;
-            this.element = element;
-        }
-
-        public static <T> OrderedValue<T> newOrderedValue(int priority, T element)
-        {
-            return new OrderedValue<>(priority, element);
-        }
-
-        public int getPriority()
-        {
-            return priority;
-        }
-
-        public T getElement()
-        {
-            return element;
-        }
-
-        @Override
-        public int compareTo(OrderedValue<T> other)
-        {
-            return Integer.compare(priority, other.getPriority());
-        }
     }
 }

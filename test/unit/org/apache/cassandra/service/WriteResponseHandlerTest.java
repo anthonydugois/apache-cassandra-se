@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Predicates;
 
+import fr.ens.cassandra.se.op.ReadOperation;
 import org.apache.cassandra.db.SinglePartitionReadCommand;
 import org.apache.cassandra.dht.Murmur3Partitioner;
 import org.apache.cassandra.locator.EndpointsForToken;
@@ -107,7 +108,7 @@ public class WriteResponseHandlerTest
             {
                 return replicas;
             }
-            public <C extends ReplicaCollection<? extends C>> C sortedByProximity(InetAddressAndPort address, C addresses, SinglePartitionReadCommand command)
+            public <C extends ReplicaCollection<? extends C>> C sortedByProximity(InetAddressAndPort address, C addresses, ReadOperation<SinglePartitionReadCommand> operation)
             {
                 return sortedByProximity(address, addresses);
             }

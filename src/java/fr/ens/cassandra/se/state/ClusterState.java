@@ -63,7 +63,7 @@ public class ClusterState
         InetAddressAndPort address = FBUtilities.getLocalAddressAndPort();
         StateFeedback feedback = new StateFeedback();
 
-        feedback.put(DatabaseDescriptor.getStateFeedbackFacts());
+        feedback.put(DatabaseDescriptor.getStateFeedback());
 
         state(address).add(feedback);
     }

@@ -874,19 +874,21 @@ public class Message<T>
         private <T> void serializePost40(Message<T> message, DataOutputPlus out, int version) throws IOException
         {
             serializeHeaderPost40(message.header, out, version);
-            out.writeUnsignedVInt(message.payloadSize(version));
-            message.verb().serializer().serialize(message.payload, out, version);
 
             StateFeedback.serializer.serialize(message.feedback, out, version);
+
+            out.writeUnsignedVInt(message.payloadSize(version));
+            message.verb().serializer().serialize(message.payload, out, version);
         }
 
         private <T> Message<T> deserializePost40(DataInputPlus in, InetAddressAndPort peer, int version) throws IOException
         {
             Header header = deserializeHeaderPost40(in, peer, version);
-            skipUnsignedVInt(in); // payload size, not needed by payload deserializer
-            T payload = (T) header.verb.serializer().deserialize(in, version);
 
             StateFeedback feedback = StateFeedback.serializer.deserialize(in, version);
+
+            skipUnsignedVInt(in); // payload size, not needed by payload deserializer
+            T payload = (T) header.verb.serializer().deserialize(in, version);
 
             Message<T> message = new Message<>(header, payload);
             message.setFeedback(feedback);
@@ -897,9 +899,11 @@ public class Message<T>
         private <T> Message<T> deserializePost40(DataInputPlus in, Header header, int version) throws IOException
         {
             skipHeaderPost40(in);
+
+            StateFeedback feedback = StateFeedback.serializer.deserialize(in, version);
+
             skipUnsignedVInt(in); // payload size, not needed by payload deserializer
             T payload = (T) header.verb.serializer().deserialize(in, version);
-            StateFeedback feedback = StateFeedback.serializer.deserialize(in, version);
 
             Message<T> message = new Message<>(header, payload);
             message.setFeedback(feedback);
@@ -911,9 +915,11 @@ public class Message<T>
         {
             long size = 0;
             size += serializedHeaderSizePost40(message.header, version);
+
+            size += StateFeedback.serializer.serializedSize(message.feedback, version);
+
             int payloadSize = message.payloadSize(version);
             size += sizeofUnsignedVInt(payloadSize) + payloadSize;
-            size += StateFeedback.serializer.serializedSize(message.feedback, version);
 
             return Ints.checkedCast(size);
         }
@@ -951,15 +957,15 @@ public class Message<T>
                 return -1;
             index += paramsSize;
 
-            long payloadSize = getUnsignedVInt(buf, index, readerLimit);
-            if (payloadSize < 0)
-                return -1;
-            index += computeUnsignedVIntSize(payloadSize) + payloadSize;
-
             long feedbackSize = getUnsignedVInt(buf, index, readerLimit);
             if (feedbackSize < 0)
                 return -1;
             index += computeUnsignedVIntSize(feedbackSize) + feedbackSize;
+
+            long payloadSize = getUnsignedVInt(buf, index, readerLimit);
+            if (payloadSize < 0)
+                return -1;
+            index += computeUnsignedVIntSize(payloadSize) + payloadSize;
 
             return index - readerIndex;
         }

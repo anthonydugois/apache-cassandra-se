@@ -18,11 +18,11 @@
 
 package fr.ens.cassandra.se.state;
 
-import java.util.EnumMap;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 
+import com.google.common.collect.Maps;
+import com.google.common.collect.Queues;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,9 +33,9 @@ public class EndpointState implements Runnable
 {
     private static final Logger logger = LoggerFactory.getLogger(EndpointState.class);
 
-    private final BlockingQueue<StateFeedback> queue = new PriorityBlockingQueue<>();
+    private final PriorityBlockingQueue<StateFeedback> queue = Queues.newPriorityBlockingQueue();
 
-    private final Map<Fact, Object> values = new EnumMap<>(Fact.class);
+    private final Map<Fact, Object> values = Maps.newEnumMap(Fact.class);
 
     private final InetAddressAndPort address;
 
@@ -67,14 +67,7 @@ public class EndpointState implements Runnable
     {
         if (feedback.size() > 0)
         {
-            try
-            {
-                queue.put(feedback);
-            }
-            catch (InterruptedException exception)
-            {
-                throw new RuntimeException(exception);
-            }
+            queue.put(feedback);
         }
 
         return this;

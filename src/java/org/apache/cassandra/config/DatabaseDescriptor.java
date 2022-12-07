@@ -51,6 +51,8 @@ import javax.annotation.Nullable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.google.common.util.concurrent.RateLimiter;
@@ -198,6 +200,8 @@ public class DatabaseDescriptor
 
     private static ReadQueue readQueue;
 
+    private static Set<Fact> state_feedback;
+
     private static Map<String, Oracle> oracles;
 
     public static void daemonInitialization() throws ConfigurationException
@@ -265,6 +269,8 @@ public class DatabaseDescriptor
         applySnitch();
 
         applyReadQueue();
+
+        applyStateFeedback();
 
         applyOracles();
 
@@ -403,6 +409,8 @@ public class DatabaseDescriptor
         applySnitch();
 
         applyReadQueue();
+
+        applyStateFeedback();
 
         applyOracles();
 
@@ -1344,16 +1352,33 @@ public class DatabaseDescriptor
         }
     }
 
+    public static void applyStateFeedback()
+    {
+        if (conf.advanced_scheduling)
+        {
+            if (conf.state_feedback == null)
+            {
+                state_feedback = Sets.newHashSet();
+            }
+            else
+            {
+                state_feedback = conf.state_feedback;
+            }
+        }
+    }
+
     public static void applyOracles()
     {
         if (conf.advanced_scheduling)
         {
             if (conf.oracles == null)
             {
-                throw new ConfigurationException("Missing oracles directive", false);
+                oracles = Maps.newHashMap();
             }
-
-            oracles = createAdvancedOracles(conf.oracles);
+            else
+            {
+                oracles = createAdvancedOracles(conf.oracles);
+            }
         }
     }
 
@@ -1469,7 +1494,7 @@ public class DatabaseDescriptor
     {
         try
         {
-            Map<String, Oracle> map = new HashMap<>();
+            Map<String, Oracle> map = Maps.newHashMap();
 
             for (Map.Entry<String, ParameterizedClass> entry : oracles.entrySet())
             {
@@ -1482,7 +1507,7 @@ public class DatabaseDescriptor
 
                 if (oracleParameters == null)
                 {
-                    oracleParameters = new HashMap<>(); // avoid null pointer
+                    oracleParameters = Maps.newHashMap(); // avoid null pointer
                 }
 
                 map.put(key, (Oracle) oracleConstructor.newInstance(oracleParameters));
@@ -1794,6 +1819,11 @@ public class DatabaseDescriptor
         return readQueue;
     }
 
+    public static Set<Fact> getStateFeedback()
+    {
+        return state_feedback;
+    }
+
     public static Map<String, Oracle> getOracles()
     {
         return oracles;
@@ -1802,11 +1832,6 @@ public class DatabaseDescriptor
     public static <K, V> Oracle<K, V> getOracle(String key)
     {
         return (Oracle<K, V>) oracles.get(key);
-    }
-
-    public static Set<Fact> getStateFeedbackFacts()
-    {
-        return conf.state_feedback;
     }
 
     public static IFailureDetector newFailureDetector()

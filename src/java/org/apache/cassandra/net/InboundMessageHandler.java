@@ -26,8 +26,8 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.ens.cassandra.se.op.ReadOperationProvider;
 import fr.ens.cassandra.se.op.ReadOperation;
+import fr.ens.cassandra.se.op.ReadOperationProvider;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import org.apache.cassandra.concurrent.ExecutorLocals;
@@ -36,9 +36,9 @@ import org.apache.cassandra.db.ReadCommand;
 import org.apache.cassandra.exceptions.IncompatibleSchemaException;
 import org.apache.cassandra.io.util.DataInputBuffer;
 import org.apache.cassandra.locator.InetAddressAndPort;
-import org.apache.cassandra.net.Message.Header;
-import org.apache.cassandra.net.FrameDecoder.IntactFrame;
 import org.apache.cassandra.net.FrameDecoder.CorruptFrame;
+import org.apache.cassandra.net.FrameDecoder.IntactFrame;
+import org.apache.cassandra.net.Message.Header;
 import org.apache.cassandra.net.ResourceLimits.Limit;
 import org.apache.cassandra.tracing.TraceState;
 import org.apache.cassandra.tracing.Tracing;
@@ -449,13 +449,13 @@ public class InboundMessageHandler extends AbstractMessageHandler
         }
 
         @Override
-        public ReadOperation getReadOperation()
+        public <T extends ReadCommand> ReadOperation<T> getReadOperation()
         {
             Message message = provideMessage();
 
             if (message != null && message.payload instanceof ReadCommand)
             {
-                return ReadOperation.from((ReadCommand) message.payload);
+                return ReadOperation.from((T) message.payload);
             }
 
             return null;

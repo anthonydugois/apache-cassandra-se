@@ -23,11 +23,11 @@ import java.util.Map;
 /**
  * This oracle infers key size from a partition key that has the following form: {size}_{id}, where {size} corresponds
  * to the number of bytes of the associated value, and {id} is a unique identifier.
- *
+ * <p>
  * This oracle has two advantages over CSVKeySizeOracle:
  * - no additional memory is needed;
  * - write-after-rampup operations are automatically handled (no need to update the key-size memory map).
- *
+ * <p>
  * Unless there is a need to perform specific calculations over the full set of data (for example, computing some
  * statistics), this oracle should be prefered over CSVKeySizeOracle.
  */
@@ -41,8 +41,22 @@ public class KeySizeOracle extends AbstractOracle<String, Integer>
     @Override
     public Integer get(String key)
     {
+        int size = 0;
+
         String[] values = key.split("_", 2);
 
-        return Integer.parseInt(values[0]);
+        if (values.length >= 2)
+        {
+            try
+            {
+                size = Integer.parseInt(values[0]);
+            }
+            catch (NumberFormatException exception)
+            {
+                // ignored
+            }
+        }
+
+        return size;
     }
 }

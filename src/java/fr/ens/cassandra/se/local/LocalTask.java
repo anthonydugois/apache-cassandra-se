@@ -20,6 +20,7 @@ package fr.ens.cassandra.se.local;
 
 import fr.ens.cassandra.se.op.ReadOperation;
 import fr.ens.cassandra.se.op.ReadOperationProvider;
+import org.apache.cassandra.db.ReadCommand;
 
 public abstract class LocalTask implements Runnable
 {
@@ -58,7 +59,7 @@ public abstract class LocalTask implements Runnable
         }
 
         @Override
-        public ReadOperation getReadOperation()
+        public <T extends ReadCommand> ReadOperation<T> getReadOperation()
         {
             return provider.getReadOperation();
         }

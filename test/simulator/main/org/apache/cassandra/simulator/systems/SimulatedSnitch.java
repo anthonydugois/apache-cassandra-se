@@ -24,6 +24,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
+import fr.ens.cassandra.se.op.ReadOperation;
 import org.apache.cassandra.db.SinglePartitionReadCommand;
 import org.apache.cassandra.distributed.Cluster;
 import org.apache.cassandra.distributed.api.IInstanceConfig;
@@ -53,7 +54,7 @@ public class SimulatedSnitch extends NodeLookup
         {
             return addresses.sorted(Comparator.comparingInt(SimulatedSnitch::asInt));
         }
-        public <C extends ReplicaCollection<? extends C>> C sortedByProximity(InetAddressAndPort address, C addresses, SinglePartitionReadCommand command)
+        public <C extends ReplicaCollection<? extends C>> C sortedByProximity(InetAddressAndPort address, C addresses, ReadOperation<SinglePartitionReadCommand> operation)
         {
             return sortedByProximity(address, addresses);
         }

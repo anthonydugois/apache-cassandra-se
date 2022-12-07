@@ -27,22 +27,22 @@ import org.apache.cassandra.io.util.DataOutputPlus;
 public enum Info
 {
     PRIORITY(1,
-             new InfoSerializer<Long>()
+             new InfoSerializer<Integer>()
              {
                  @Override
-                 public void serialize(Long priority, DataOutputPlus out, int version) throws IOException
+                 public void serialize(Integer priority, DataOutputPlus out, int version) throws IOException
                  {
                      out.writeUnsignedVInt(priority);
                  }
 
                  @Override
-                 public Long deserialize(DataInputPlus in, int version) throws IOException
+                 public Integer deserialize(DataInputPlus in, int version) throws IOException
                  {
-                     return in.readUnsignedVInt();
+                     return (int) in.readUnsignedVInt();
                  }
 
                  @Override
-                 public long serializedSize(Long priority, int version)
+                 public long serializedSize(Integer priority, int version)
                  {
                      return TypeSizes.sizeofUnsignedVInt(priority);
                  }

@@ -20,6 +20,9 @@ package fr.ens.cassandra.se.selector;
 
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import fr.ens.cassandra.se.op.ReadOperation;
 import fr.ens.cassandra.se.op.info.Info;
 import fr.ens.cassandra.se.oracle.Oracle;
@@ -31,6 +34,8 @@ import org.apache.cassandra.locator.ReplicaCollection;
 
 public class PriorityPrimarySelector extends PrimarySelector
 {
+    private static final Logger logger = LoggerFactory.getLogger(PriorityPrimarySelector.class);
+
     private static final String THRESHOLD_PROPERTY = "threshold";
     private static final String DEFAULT_THRESHOLD_PROPERTY = "1024";
 
@@ -47,15 +52,23 @@ public class PriorityPrimarySelector extends PrimarySelector
     public <C extends ReplicaCollection<? extends C>> C sortedByProximity(InetAddressAndPort address, C unsortedAddress, ReadOperation<SinglePartitionReadCommand> operation)
     {
         Oracle<String, Integer> oracle = DatabaseDescriptor.getOracle("size");
+
         int size = oracle.get(operation.key());
 
-        if (size <= threshold)
+        if (size > 0)
         {
-            operation.add(Info.PRIORITY, 0);
+            if (size <= threshold)
+            {
+                operation.add(Info.PRIORITY, 0);
+            }
+            else
+            {
+                operation.add(Info.PRIORITY, 1);
+            }
         }
         else
         {
-            operation.add(Info.PRIORITY, 1);
+            operation.add(Info.PRIORITY, 0);
         }
 
         return super.sortedByProximity(address, unsortedAddress);

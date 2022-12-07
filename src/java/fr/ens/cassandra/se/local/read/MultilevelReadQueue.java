@@ -18,12 +18,13 @@
 
 package fr.ens.cassandra.se.local.read;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Queues;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,8 +36,8 @@ public class MultilevelReadQueue extends AbstractReadQueue<Runnable>
 {
     private static final Logger logger = LoggerFactory.getLogger(MultilevelReadQueue.class);
 
-    public static final String LEVELS_PROPERTY = "levels";
-    public static final String DEFAULT_LEVELS_PROPERTY = "10";
+    private static final String LEVELS_PROPERTY = "levels";
+    private static final String DEFAULT_LEVELS_PROPERTY = "10";
 
     private final int levels;
 
@@ -47,13 +48,12 @@ public class MultilevelReadQueue extends AbstractReadQueue<Runnable>
         super(parameters);
 
         this.levels = Integer.parseInt(parameters.getOrDefault(LEVELS_PROPERTY, DEFAULT_LEVELS_PROPERTY));
-        this.queues = new ArrayList<>(this.levels);
+
+        this.queues = Lists.newArrayListWithCapacity(this.levels);
 
         for (int i = 0; i < this.levels; ++i)
         {
-            ConcurrentLinkedQueue<Runnable> queue = new ConcurrentLinkedQueue<>();
-
-            queues.set(i, queue);
+            queues.add(Queues.newConcurrentLinkedQueue());
         }
     }
 
@@ -77,9 +77,13 @@ public class MultilevelReadQueue extends AbstractReadQueue<Runnable>
         if (runnable instanceof LocalTask.ReadTask)
         {
             ReadOperation op = ((LocalTask.ReadTask) runnable).getReadOperation();
-            int priority = (int) op.info(Info.PRIORITY);
 
-            queue = queues.get(priority);
+            if (op != null && op.has(Info.PRIORITY))
+            {
+                int priority = (int) op.info(Info.PRIORITY);
+
+                queue = queues.get(priority);
+            }
         }
 
         return queue.offer(runnable);
@@ -88,28 +92,34 @@ public class MultilevelReadQueue extends AbstractReadQueue<Runnable>
     @Override
     public Runnable poll()
     {
-        for (ConcurrentLinkedQueue<Runnable> queue : queues)
+        while (true)
         {
-            if (!queue.isEmpty())
+            for (ConcurrentLinkedQueue<Runnable> queue : queues)
             {
-                return queue.poll();
+                Runnable runnable = queue.poll();
+
+                if (runnable != null)
+                {
+                    return runnable;
+                }
             }
         }
-
-        return null;
     }
 
     @Override
     public Runnable peek()
     {
-        for (ConcurrentLinkedQueue<Runnable> queue : queues)
+        while (true)
         {
-            if (!queue.isEmpty())
+            for (ConcurrentLinkedQueue<Runnable> queue : queues)
             {
-                return queue.peek();
+                Runnable runnable = queue.peek();
+
+                if (runnable != null)
+                {
+                    return runnable;
+                }
             }
         }
-
-        return null;
     }
 }

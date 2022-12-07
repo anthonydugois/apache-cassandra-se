@@ -50,18 +50,18 @@ public class DynamicSnitchingSelector extends AbstractSelector implements Latenc
 {
     private static final Logger logger = LoggerFactory.getLogger(DynamicSnitchingSelector.class);
 
-    public static final String UPDATE_INTERVAL_PROPERTY = "update_interval";
-    public static final String DEFAULT_UPDATE_INTERVAL_PROPERTY = "100";
+    private static final String UPDATE_INTERVAL_PROPERTY = "update_interval";
+    private static final String DEFAULT_UPDATE_INTERVAL_PROPERTY = "100";
 
     private final int updateInterval;
 
-    public static final String RESET_INTERVAL_PROPERTY = "reset_interval";
-    public static final String DEFAULT_RESET_INTERVAL_PROPERTY = "600000";
+    private static final String RESET_INTERVAL_PROPERTY = "reset_interval";
+    private static final String DEFAULT_RESET_INTERVAL_PROPERTY = "600000";
 
     private final int resetInterval;
 
-    public static final String BADNESS_THRESHOLD_PROPERTY = "badness_threshold";
-    public static final String DEFAULT_BADNESS_THRESHOLD_PROPERTY = "1.0";
+    private static final String BADNESS_THRESHOLD_PROPERTY = "badness_threshold";
+    private static final String DEFAULT_BADNESS_THRESHOLD_PROPERTY = "1.0";
 
     private final double badnessThreshold;
 

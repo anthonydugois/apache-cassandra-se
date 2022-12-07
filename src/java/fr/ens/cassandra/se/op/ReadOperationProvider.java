@@ -18,7 +18,9 @@
 
 package fr.ens.cassandra.se.op;
 
+import org.apache.cassandra.db.ReadCommand;
+
 public interface ReadOperationProvider
 {
-    ReadOperation getReadOperation();
+    <T extends ReadCommand> ReadOperation<T> getReadOperation();
 }

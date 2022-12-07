@@ -30,7 +30,7 @@ import org.apache.cassandra.io.util.DataOutputPlus;
 
 public class ReadCommandInfos
 {
-    public static final IVersionedSerializer<ReadCommandInfos> serializer = new IVersionedSerializer<ReadCommandInfos>()
+    public static final IVersionedSerializer<ReadCommandInfos> serializer = new IVersionedSerializer<>()
     {
         @Override
         public void serialize(ReadCommandInfos infos, DataOutputPlus out, int version) throws IOException
@@ -88,6 +88,11 @@ public class ReadCommandInfos
     public int size()
     {
         return values.size();
+    }
+
+    public boolean has(Info info)
+    {
+        return values.containsKey(info);
     }
 
     public Object get(Info info)

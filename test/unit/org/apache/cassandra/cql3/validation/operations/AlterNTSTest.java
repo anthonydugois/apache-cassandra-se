@@ -24,6 +24,7 @@ import java.util.UUID;
 import org.junit.Test;
 
 import com.datastax.driver.core.PreparedStatement;
+import fr.ens.cassandra.se.op.ReadOperation;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.cql3.CQLTester;
 import org.apache.cassandra.db.SinglePartitionReadCommand;
@@ -133,7 +134,7 @@ public class AlterNTSTest extends CQLTester
             {
                 return null;
             }
-            public <C extends ReplicaCollection<? extends C>> C sortedByProximity(InetAddressAndPort address, C addresses, SinglePartitionReadCommand command)
+            public <C extends ReplicaCollection<? extends C>> C sortedByProximity(InetAddressAndPort address, C addresses, ReadOperation<SinglePartitionReadCommand> operation)
             {
                 return sortedByProximity(address, addresses);
             }

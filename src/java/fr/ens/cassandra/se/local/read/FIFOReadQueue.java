@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import com.google.common.collect.Queues;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +30,7 @@ public class FIFOReadQueue extends AbstractReadQueue<Runnable>
 {
     private static final Logger logger = LoggerFactory.getLogger(FIFOReadQueue.class);
 
-    private final ConcurrentLinkedQueue<Runnable> queue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Runnable> queue = Queues.newConcurrentLinkedQueue();
 
     public FIFOReadQueue(Map<String, String> parameters)
     {

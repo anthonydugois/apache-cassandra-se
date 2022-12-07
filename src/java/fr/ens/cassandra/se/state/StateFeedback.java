@@ -19,9 +19,9 @@
 package fr.ens.cassandra.se.state;
 
 import java.io.IOException;
-import java.util.EnumMap;
 import java.util.Map;
 
+import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,7 +91,7 @@ public class StateFeedback implements Comparable<StateFeedback>
 
     private final long timestamp;
 
-    private final Map<Fact, Object> values = new EnumMap<>(Fact.class);
+    private final Map<Fact, Object> values = Maps.newEnumMap(Fact.class);
 
     public StateFeedback()
     {

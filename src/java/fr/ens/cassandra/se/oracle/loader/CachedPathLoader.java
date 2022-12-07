@@ -23,15 +23,16 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
 import java.util.Set;
+
+import com.google.common.collect.Sets;
 
 public class CachedPathLoader
 {
     private final String dir;
     private final String glob;
 
-    private final Set<Path> cachedPaths = new HashSet<>();
+    private final Set<Path> cachedPaths = Sets.newHashSet();
 
     public CachedPathLoader(String dir, String glob)
     {
@@ -56,7 +57,7 @@ public class CachedPathLoader
 
     public Set<Path> getPaths()
     {
-        Set<Path> paths = new HashSet<>();
+        Set<Path> paths = Sets.newHashSet();
 
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(dir), glob))
         {
