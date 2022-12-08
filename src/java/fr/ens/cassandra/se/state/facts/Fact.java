@@ -18,58 +18,21 @@
 
 package fr.ens.cassandra.se.state.facts;
 
-import java.io.IOException;
-
-import org.apache.cassandra.concurrent.Stage;
-import org.apache.cassandra.db.TypeSizes;
-import org.apache.cassandra.io.util.DataInputPlus;
-import org.apache.cassandra.io.util.DataOutputPlus;
+import fr.ens.cassandra.se.state.facts.impl.ByteArrayAggregator;
+import fr.ens.cassandra.se.state.facts.impl.ByteArrayMeasure;
+import fr.ens.cassandra.se.state.facts.impl.ByteArraySerializer;
+import fr.ens.cassandra.se.state.facts.impl.CompletedReadAggregator;
+import fr.ens.cassandra.se.state.facts.impl.CompletedReadMeasure;
+import fr.ens.cassandra.se.state.facts.impl.CompletedReadSerializer;
 
 public enum Fact
 {
-    COMPLETED_READS(1,
-                    new FactSerializer<Long>()
-                    {
-                        @Override
-                        public void serialize(Long value, DataOutputPlus out, int version) throws IOException
-                        {
-                            out.writeUnsignedVInt(value);
-                        }
-
-                        @Override
-                        public Long deserialize(DataInputPlus in, int version) throws IOException
-                        {
-                            return in.readUnsignedVInt();
-                        }
-
-                        @Override
-                        public long serializedSize(Long value, int version)
-                        {
-                            return TypeSizes.sizeofUnsignedVInt(value);
-                        }
-                    },
-                    new FactMeasure<Long>()
-                    {
-                        @Override
-                        public Long get()
-                        {
-                            return Stage.READ.executor().getCompletedTaskCount();
-                        }
-                    },
-                    new FactAggregator<Long, Long>()
-                    {
-                        @Override
-                        public Long get()
-                        {
-                            return 0L;
-                        }
-
-                        @Override
-                        public Long apply(Long current, Long value)
-                        {
-                            return value;
-                        }
-                    });
+    COMPLETED_READS(1, new CompletedReadSerializer(), new CompletedReadMeasure(), new CompletedReadAggregator()),
+    BYTE_ARRAY_4(2, new ByteArraySerializer(4), new ByteArrayMeasure(4), new ByteArrayAggregator(4)),
+    BYTE_ARRAY_16(3, new ByteArraySerializer(16), new ByteArrayMeasure(16), new ByteArrayAggregator(16)),
+    BYTE_ARRAY_64(4, new ByteArraySerializer(64), new ByteArrayMeasure(64), new ByteArrayAggregator(64)),
+    BYTE_ARRAY_256(5, new ByteArraySerializer(256), new ByteArrayMeasure(256), new ByteArrayAggregator(256)),
+    BYTE_ARRAY_1024(6, new ByteArraySerializer(1024), new ByteArrayMeasure(1024), new ByteArrayAggregator(1024));
 
     private final int id;
     private final FactSerializer serializer;
