@@ -31,6 +31,8 @@ import org.apache.cassandra.io.IVersionedSerializer;
 import org.apache.cassandra.io.util.DataInputPlus;
 import org.apache.cassandra.io.util.DataOutputPlus;
 
+import static org.apache.cassandra.utils.MonotonicClock.Global.preciseTime;
+
 public class StateFeedback implements Comparable<StateFeedback>
 {
     private static final Logger logger = LoggerFactory.getLogger(StateFeedback.class);
@@ -95,7 +97,7 @@ public class StateFeedback implements Comparable<StateFeedback>
 
     public StateFeedback()
     {
-        this(System.nanoTime());
+        this(preciseTime.now());
     }
 
     public StateFeedback(long timestamp)

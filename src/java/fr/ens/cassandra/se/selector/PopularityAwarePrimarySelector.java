@@ -19,12 +19,14 @@
 package fr.ens.cassandra.se.selector;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.common.util.concurrent.AtomicLongMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.ens.cassandra.se.op.ReadOperation;
-import org.HdrHistogram.Recorder;
+import io.netty.util.internal.ThreadLocalRandom;
 import org.apache.cassandra.db.SinglePartitionReadCommand;
 import org.apache.cassandra.locator.IEndpointSnitch;
 import org.apache.cassandra.locator.InetAddressAndPort;
@@ -35,21 +37,71 @@ public class PopularityAwarePrimarySelector extends AbstractSelector
 {
     private static final Logger logger = LoggerFactory.getLogger(PopularityAwarePrimarySelector.class);
 
-    private final Recorder recorder = new Recorder(2);
+    private static final String THRESHOLD_PROPERTY = "threshold";
+    private static final String DEFAULT_THRESHOLD_PROPERTY = "0.0";
+
+    private final double threshold;
+
+    private final AtomicLongMap<Long> accesses = AtomicLongMap.create();
+    private final AtomicInteger total = new AtomicInteger();
 
     public PopularityAwarePrimarySelector(IEndpointSnitch snitch, Map<String, String> parameters)
     {
         super(snitch, parameters);
+
+        this.threshold = Double.parseDouble(parameters.getOrDefault(THRESHOLD_PROPERTY, DEFAULT_THRESHOLD_PROPERTY));
     }
+
 
     @Override
     public <C extends ReplicaCollection<? extends C>> C sortedByProximity(InetAddressAndPort address, C unsortedAddress, ReadOperation<SinglePartitionReadCommand> operation)
     {
-        long token = (long) operation.command().partitionKey().getToken().getTokenValue();
+        // Compute a positive hash value for the current key.
+        // Note that we need to explicitly cast the hash code to a long value, otherwise the integer hash will first
+        // overflow, then loop back to negative integers and finally be casted to a negative long, which is not wanted.
+        long hash = (long) operation.key().hashCode() + Integer.MAX_VALUE;
 
-        recorder.recordValue(token);
+        if (hash < 0)
+        {
+            throw new UnsupportedOperationException();
+        }
 
-        return super.sortedByProximity(address, unsortedAddress, operation);
+        // Here we do +1 because the current operation counts as new access.
+        // This also permits to avoid dividing by 0.
+        long value = accesses.incrementAndGet(hash);
+        long count = total.incrementAndGet();
+
+        double frequency = (double) value / count;
+
+        C sortedAddress;
+
+        if (frequency > threshold)
+        {
+            // This key is considered popular.
+            // Let us randomize (uniform) the replica selection to load balance accesses.
+            int index = ThreadLocalRandom.current().nextInt(unsortedAddress.size());
+            Replica replica = unsortedAddress.get(index);
+
+            sortedAddress = unsortedAddress.sorted((r1, r2) -> {
+                if (r1.equals(replica))
+                {
+                    return -1;
+                }
+
+                if (r2.equals(replica))
+                {
+                    return 1;
+                }
+
+                return compareEndpoints(address, r1, r2);
+            });
+        }
+        else
+        {
+            sortedAddress = super.sortedByProximity(address, unsortedAddress);
+        }
+
+        return sortedAddress;
     }
 
     @Override
