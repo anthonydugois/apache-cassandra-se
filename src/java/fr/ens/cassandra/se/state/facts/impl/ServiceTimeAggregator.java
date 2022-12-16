@@ -25,52 +25,48 @@ import com.codahale.metrics.Snapshot;
 import fr.ens.cassandra.se.state.StateFeedback;
 import fr.ens.cassandra.se.state.facts.FactAggregator;
 
-public class ServiceRateAggregator implements FactAggregator<ServiceRateAggregator.ServiceRate, Long>
+public class ServiceTimeAggregator implements FactAggregator<ServiceTimeAggregator.ServiceTime, Long>
 {
     @Override
-    public ServiceRate get()
+    public ServiceTime get()
     {
-        return new ServiceRate();
+        return new ServiceTime();
     }
 
     @Override
-    public ServiceRate apply(ServiceRate current, Long value, StateFeedback feedback)
+    public ServiceTime apply(ServiceTime current, Long value, StateFeedback feedback)
     {
         current.update(value, feedback.timestamp());
         return current;
     }
 
-    public static class ServiceRate
+    public static class ServiceTime
     {
         private static final int WINDOW_SIZE = 100;
         private static final double ALPHA = 0.75;
 
         private final ExponentiallyDecayingReservoir reservoir;
 
-        private long lastValue = -1;
-        private long lastTimestamp = -1;
+        private long lastValue = 0;
+        private long lastTimestamp = 0;
 
-        public ServiceRate()
+        public ServiceTime()
         {
             this.reservoir = new ExponentiallyDecayingReservoir(WINDOW_SIZE, ALPHA);
         }
 
         public void update(long value, long timestamp)
         {
-            if (lastTimestamp < 0)
-            {
-                lastValue = value;
-                lastTimestamp = timestamp;
-            }
-            else
-            {
-                double diff = value - lastValue;
-                double delay = TimeUnit.NANOSECONDS.toSeconds(timestamp - lastTimestamp);
+            double diff = value - lastValue;
+            double delay = TimeUnit.NANOSECONDS.toMillis(timestamp - lastTimestamp);
 
-                double rate = diff / delay;
+            double rate = diff / delay;
+            double time = rate > 0.0 ? 1 / rate : 0.0;
 
-                reservoir.update((long) rate);
-            }
+            reservoir.update((long) time);
+
+            lastValue = value;
+            lastTimestamp = timestamp;
         }
 
         public Snapshot getSnapshot()

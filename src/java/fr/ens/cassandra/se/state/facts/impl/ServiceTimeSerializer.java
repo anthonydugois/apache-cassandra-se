@@ -25,7 +25,7 @@ import org.apache.cassandra.db.TypeSizes;
 import org.apache.cassandra.io.util.DataInputPlus;
 import org.apache.cassandra.io.util.DataOutputPlus;
 
-public class ServiceRateSerializer implements FactSerializer<Long>
+public class ServiceTimeSerializer implements FactSerializer<Long>
 {
     @Override
     public void serialize(Long value, DataOutputPlus out, int version) throws IOException

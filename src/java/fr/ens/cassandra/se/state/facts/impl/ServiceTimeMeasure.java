@@ -21,7 +21,7 @@ package fr.ens.cassandra.se.state.facts.impl;
 import fr.ens.cassandra.se.state.facts.FactMeasure;
 import org.apache.cassandra.concurrent.Stage;
 
-public class ServiceRateMeasure implements FactMeasure<Long>
+public class ServiceTimeMeasure implements FactMeasure<Long>
 {
     @Override
     public Long get()
