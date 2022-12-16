@@ -21,6 +21,8 @@ package fr.ens.cassandra.se.state;
 import java.io.IOException;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,21 +44,33 @@ public class StateFeedback implements Comparable<StateFeedback>
         @Override
         public void serialize(StateFeedback feedback, DataOutputPlus out, int version) throws IOException
         {
-            long payloadSize = feedback.payloadSize(version);
-            long timestamp = feedback.timestamp();
-            int count = feedback.size();
+            long payloadSize = 0;
 
-            out.writeUnsignedVInt(payloadSize); // include payload size to make inference easier
-            out.writeUnsignedVInt(timestamp);
-            out.writeUnsignedVInt(count);
-
-            for (Map.Entry<Fact, Object> entry : feedback.values().entrySet())
+            if (feedback != null)
             {
-                Fact fact = entry.getKey();
-                Object value = entry.getValue();
+                payloadSize = feedback.payloadSize(version);
+            }
 
-                out.writeUnsignedVInt(fact.getId());
-                fact.serializer().serialize(value, out, version);
+            // Include payload size to make inference easier.
+            // A payload size equal to 0 means no feedback included.
+            out.writeUnsignedVInt(payloadSize);
+
+            if (feedback != null)
+            {
+                long timestamp = feedback.timestamp();
+                out.writeUnsignedVInt(timestamp);
+
+                int count = feedback.size();
+                out.writeUnsignedVInt(count);
+
+                for (Map.Entry<Fact, Object> entry : feedback.values().entrySet())
+                {
+                    Fact fact = entry.getKey();
+                    out.writeUnsignedVInt(fact.getId());
+
+                    Object value = entry.getValue();
+                    fact.serializer().serialize(value, out, version);
+                }
             }
         }
 
@@ -64,6 +78,12 @@ public class StateFeedback implements Comparable<StateFeedback>
         public StateFeedback deserialize(DataInputPlus in, int version) throws IOException
         {
             long payloadSize = in.readUnsignedVInt();
+
+            if (payloadSize <= 0)
+            {
+                return null;
+            }
+
             long timestamp = in.readUnsignedVInt();
             int count = (int) in.readUnsignedVInt();
 
@@ -85,7 +105,12 @@ public class StateFeedback implements Comparable<StateFeedback>
         @Override
         public long serializedSize(StateFeedback feedback, int version)
         {
-            long payloadSize = feedback.payloadSize(version);
+            long payloadSize = 0;
+
+            if (feedback != null)
+            {
+                payloadSize = feedback.payloadSize(version);
+            }
 
             return TypeSizes.sizeofUnsignedVInt(payloadSize) + payloadSize;
         }

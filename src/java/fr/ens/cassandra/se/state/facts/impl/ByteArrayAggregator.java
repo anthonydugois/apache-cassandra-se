@@ -18,6 +18,7 @@
 
 package fr.ens.cassandra.se.state.facts.impl;
 
+import fr.ens.cassandra.se.state.StateFeedback;
 import fr.ens.cassandra.se.state.facts.FactAggregator;
 
 public class ByteArrayAggregator implements FactAggregator<String, String>
@@ -41,7 +42,7 @@ public class ByteArrayAggregator implements FactAggregator<String, String>
     }
 
     @Override
-    public String apply(String current, String value)
+    public String apply(String current, String value, StateFeedback feedback)
     {
         return value;
     }

@@ -16,13 +16,16 @@
  * limitations under the License.
  */
 
-package fr.ens.cassandra.se.state.facts;
+package fr.ens.cassandra.se.state.facts.impl;
 
-import fr.ens.cassandra.se.state.StateFeedback;
+import fr.ens.cassandra.se.state.facts.FactMeasure;
+import org.apache.cassandra.concurrent.Stage;
 
-public interface FactAggregator<T, U>
+public class PendingReadMeasure implements FactMeasure<Integer>
 {
-    T get();
-
-    T apply(T current, U value, StateFeedback feedback);
+    @Override
+    public Integer get()
+    {
+        return Stage.READ.executor().getPendingTaskCount();
+    }
 }

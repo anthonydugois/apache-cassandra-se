@@ -20,6 +20,7 @@ package org.apache.cassandra.db;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import fr.ens.cassandra.se.state.StateFeedback;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.db.partitions.UnfilteredPartitionIterator;
 import org.apache.cassandra.dht.Token;
@@ -89,7 +90,10 @@ public class ReadCommandVerbHandler implements IVerbHandler<ReadCommand>
         Message<ReadResponse> reply = message.responseWith(response);
         reply = MessageParams.addToMessage(reply);
 
-        reply.feedback().put(DatabaseDescriptor.getStateFeedback());
+        StateFeedback feedback = new StateFeedback();
+        feedback.put(DatabaseDescriptor.getStateFeedback());
+
+        reply.setFeedback(feedback);
 
         MessagingService.instance().send(reply, message.from());
     }

@@ -24,6 +24,12 @@ import fr.ens.cassandra.se.state.facts.impl.ByteArraySerializer;
 import fr.ens.cassandra.se.state.facts.impl.CompletedReadAggregator;
 import fr.ens.cassandra.se.state.facts.impl.CompletedReadMeasure;
 import fr.ens.cassandra.se.state.facts.impl.CompletedReadSerializer;
+import fr.ens.cassandra.se.state.facts.impl.PendingReadAggregator;
+import fr.ens.cassandra.se.state.facts.impl.PendingReadMeasure;
+import fr.ens.cassandra.se.state.facts.impl.PendingReadSerializer;
+import fr.ens.cassandra.se.state.facts.impl.ServiceRateAggregator;
+import fr.ens.cassandra.se.state.facts.impl.ServiceRateMeasure;
+import fr.ens.cassandra.se.state.facts.impl.ServiceRateSerializer;
 
 public enum Fact
 {
@@ -32,7 +38,10 @@ public enum Fact
     BYTE_ARRAY_16(3, new ByteArraySerializer(16), new ByteArrayMeasure(16), new ByteArrayAggregator(16)),
     BYTE_ARRAY_64(4, new ByteArraySerializer(64), new ByteArrayMeasure(64), new ByteArrayAggregator(64)),
     BYTE_ARRAY_256(5, new ByteArraySerializer(256), new ByteArrayMeasure(256), new ByteArrayAggregator(256)),
-    BYTE_ARRAY_1024(6, new ByteArraySerializer(1024), new ByteArrayMeasure(1024), new ByteArrayAggregator(1024));
+    BYTE_ARRAY_1024(6, new ByteArraySerializer(1024), new ByteArrayMeasure(1024), new ByteArrayAggregator(1024)),
+
+    PENDING_READS(10, new PendingReadSerializer(), new PendingReadMeasure(), new PendingReadAggregator()),
+    SERVICE_RATE(11, new ServiceRateSerializer(), new ServiceRateMeasure(), new ServiceRateAggregator());
 
     private final int id;
     private final FactSerializer serializer;

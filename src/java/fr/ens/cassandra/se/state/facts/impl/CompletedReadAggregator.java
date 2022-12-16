@@ -18,6 +18,7 @@
 
 package fr.ens.cassandra.se.state.facts.impl;
 
+import fr.ens.cassandra.se.state.StateFeedback;
 import fr.ens.cassandra.se.state.facts.FactAggregator;
 
 public class CompletedReadAggregator implements FactAggregator<Long, Long>
@@ -29,7 +30,7 @@ public class CompletedReadAggregator implements FactAggregator<Long, Long>
     }
 
     @Override
-    public Long apply(Long current, Long value)
+    public Long apply(Long current, Long value, StateFeedback feedback)
     {
         return value;
     }

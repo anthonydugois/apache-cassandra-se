@@ -41,17 +41,14 @@ public class ClusterState
 
         if (state == null)
         {
-            state = new EndpointState(address);
+            EndpointState newState = new EndpointState(address);
 
-            EndpointState currentState = states.putIfAbsent(address, state);
+            state = states.putIfAbsent(address, newState);
 
-            if (currentState == null)
+            if (state == null)
             {
+                state = newState;
                 executor.execute(state);
-            }
-            else
-            {
-                state = currentState;
             }
         }
 

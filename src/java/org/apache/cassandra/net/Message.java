@@ -75,7 +75,7 @@ public class Message<T>
     public final Header header;
     public final T payload;
 
-    private StateFeedback feedback = new StateFeedback();
+    private StateFeedback feedback;
 
     Message(Header header, T payload)
     {

@@ -65,7 +65,7 @@ public class EndpointState implements Runnable
 
     public EndpointState add(StateFeedback feedback)
     {
-        if (feedback.size() > 0)
+        if (feedback != null && feedback.size() > 0)
         {
             queue.put(feedback);
         }
@@ -90,7 +90,7 @@ public class EndpointState implements Runnable
                         Object value = entry.getValue();
                         Object current = get(fact);
 
-                        values.put(fact, fact.aggregator().apply(current, value));
+                        values.put(fact, fact.aggregator().apply(current, value, feedback));
                     }
 
                     lastTimestamp = feedback.timestamp();

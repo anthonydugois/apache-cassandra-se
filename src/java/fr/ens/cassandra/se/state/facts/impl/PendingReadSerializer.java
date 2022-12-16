@@ -16,13 +16,32 @@
  * limitations under the License.
  */
 
-package fr.ens.cassandra.se.state.facts;
+package fr.ens.cassandra.se.state.facts.impl;
 
-import fr.ens.cassandra.se.state.StateFeedback;
+import java.io.IOException;
 
-public interface FactAggregator<T, U>
+import fr.ens.cassandra.se.state.facts.FactSerializer;
+import org.apache.cassandra.db.TypeSizes;
+import org.apache.cassandra.io.util.DataInputPlus;
+import org.apache.cassandra.io.util.DataOutputPlus;
+
+public class PendingReadSerializer implements FactSerializer<Integer>
 {
-    T get();
+    @Override
+    public void serialize(Integer value, DataOutputPlus out, int version) throws IOException
+    {
+        out.writeUnsignedVInt(value);
+    }
 
-    T apply(T current, U value, StateFeedback feedback);
+    @Override
+    public Integer deserialize(DataInputPlus in, int version) throws IOException
+    {
+        return (int) in.readUnsignedVInt();
+    }
+
+    @Override
+    public long serializedSize(Integer value, int version)
+    {
+        return TypeSizes.sizeofUnsignedVInt(value);
+    }
 }

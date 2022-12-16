@@ -16,13 +16,27 @@
  * limitations under the License.
  */
 
-package fr.ens.cassandra.se.state.facts;
+package fr.ens.cassandra.se.state.facts.impl;
 
+import com.codahale.metrics.ExponentiallyDecayingReservoir;
 import fr.ens.cassandra.se.state.StateFeedback;
+import fr.ens.cassandra.se.state.facts.FactAggregator;
 
-public interface FactAggregator<T, U>
+public class PendingReadAggregator implements FactAggregator<ExponentiallyDecayingReservoir, Integer>
 {
-    T get();
+    private static final int WINDOW_SIZE = 100;
+    private static final double ALPHA = 0.75;
 
-    T apply(T current, U value, StateFeedback feedback);
+    @Override
+    public ExponentiallyDecayingReservoir get()
+    {
+        return new ExponentiallyDecayingReservoir(WINDOW_SIZE, ALPHA);
+    }
+
+    @Override
+    public ExponentiallyDecayingReservoir apply(ExponentiallyDecayingReservoir current, Integer value, StateFeedback feedback)
+    {
+        current.update(value);
+        return current;
+    }
 }
