@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.ens.cassandra.se.op.ReadOperation;
+import fr.ens.cassandra.se.op.info.Info;
 import io.netty.util.internal.ThreadLocalRandom;
 import org.apache.cassandra.db.SinglePartitionReadCommand;
 import org.apache.cassandra.locator.IEndpointSnitch;
@@ -51,7 +52,6 @@ public class PopularityAwarePrimarySelector extends AbstractSelector
 
         this.threshold = Double.parseDouble(parameters.getOrDefault(THRESHOLD_PROPERTY, DEFAULT_THRESHOLD_PROPERTY));
     }
-
 
     @Override
     public <C extends ReplicaCollection<? extends C>> C sortedByProximity(InetAddressAndPort address, C unsortedAddress, ReadOperation<SinglePartitionReadCommand> operation)
@@ -95,10 +95,18 @@ public class PopularityAwarePrimarySelector extends AbstractSelector
 
                 return compareEndpoints(address, r1, r2);
             });
+
+            // The corresponding operation should have higher priority.
+            operation.add(Info.PRIORITY, 0);
         }
         else
         {
+            // This key is not considered popular.
+            // Use the default policy (Primary by default).
             sortedAddress = super.sortedByProximity(address, unsortedAddress);
+
+            // The corresponding operation has lower priority.
+            operation.add(Info.PRIORITY, 1);
         }
 
         return sortedAddress;

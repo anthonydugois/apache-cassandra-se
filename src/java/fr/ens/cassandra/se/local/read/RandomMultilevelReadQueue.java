@@ -37,12 +37,12 @@ import io.netty.util.internal.ThreadLocalRandom;
  * This queue is composed of multiple queues, which are attached a weight. The first queue has the highest priority,
  * thus it is attached the highest weight. The second queue has the second highest weight, third queue the third highest
  * weight, etc.
- *
+ * <p>
  * When polling, we pick a random integer between 0 and the weight sum (uniformly). Then we check in which interval this
  * random value is falling; if it is between 0 and first weight, then we poll from the first queue, which has the
  * highest priority. If the random value falls between first weight and the sum of the two first weights, then we poll
  * from the second queue, etc.
- *
+ * <p>
  * For now, the number of queues is configurable, but the weights are fixed: 2^n, 2^(n-1), 2^(n-2), etc, where n is
  * total number of queues. With two queues, this means that first queue will be chosen with probability 2/3, whereas the
  * second queue will be chosen with probability 1/3.
@@ -101,7 +101,7 @@ public class RandomMultilevelReadQueue extends AbstractReadQueue<Runnable>
     @Override
     public boolean offer(Runnable runnable)
     {
-        // By default, pick a random queue
+        // By default, pick a random queue.
         int index = ThreadLocalRandom.current().nextInt(levels);
 
         if (runnable instanceof LocalTask.ReadTask)
@@ -110,8 +110,11 @@ public class RandomMultilevelReadQueue extends AbstractReadQueue<Runnable>
 
             if (op != null && op.has(Info.PRIORITY))
             {
-                // If we got a read task, and it has a priority attached, pick the corresponding queue
+                // If we got a read task, and it has a priority attached, pick the corresponding queue.
                 index = (int) op.info(Info.PRIORITY);
+
+                // Make sure the priority value does fit in the queue.
+                index = Math.min(levels - 1, Math.max(0, index));
             }
         }
 
