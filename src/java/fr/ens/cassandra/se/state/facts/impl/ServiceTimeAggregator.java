@@ -42,9 +42,6 @@ public class ServiceTimeAggregator implements FactAggregator<ServiceTimeAggregat
 
     public static class ServiceTime
     {
-        private static final int WINDOW_SIZE = 100;
-        private static final double ALPHA = 0.75;
-
         private final ExponentiallyDecayingReservoir reservoir;
 
         private long lastValue = 0;
@@ -52,7 +49,7 @@ public class ServiceTimeAggregator implements FactAggregator<ServiceTimeAggregat
 
         public ServiceTime()
         {
-            this.reservoir = new ExponentiallyDecayingReservoir(WINDOW_SIZE, ALPHA);
+            this.reservoir = new ExponentiallyDecayingReservoir();
         }
 
         public void update(long value, long timestamp)

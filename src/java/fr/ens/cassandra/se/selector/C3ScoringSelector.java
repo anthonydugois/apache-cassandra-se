@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.ExponentiallyDecayingReservoir;
+import com.codahale.metrics.Snapshot;
 import fr.ens.cassandra.se.op.ReadOperation;
 import fr.ens.cassandra.se.state.ClusterState;
 import fr.ens.cassandra.se.state.EndpointState;
@@ -41,14 +42,15 @@ import org.apache.cassandra.locator.Replica;
 import org.apache.cassandra.locator.ReplicaCollection;
 import org.apache.cassandra.net.LatencySubscribers;
 import org.apache.cassandra.net.MessagingService;
-import org.apache.cassandra.utils.FBUtilities;
 
 public class C3ScoringSelector extends AbstractSelector implements LatencySubscribers.Subscriber
 {
     private static final Logger logger = LoggerFactory.getLogger(C3ScoringSelector.class);
 
-    private static final int WINDOW_SIZE = 100;
-    private static final double ALPHA = 0.75;
+    private static final String CONCURRENCY_WEIGHT_PROPERTY = "concurrency_weight";
+    private static final String DEFAULT_CONCURRENCY_WEIGHT_PROPERTY = "1.0";
+
+    private final double concurrencyWeight;
 
     private ConcurrentMap<InetAddressAndPort, ExponentiallyDecayingReservoir> latencies = new ConcurrentHashMap<>();
     private AtomicLongMap<InetAddressAndPort> outstanding = AtomicLongMap.create();
@@ -56,6 +58,8 @@ public class C3ScoringSelector extends AbstractSelector implements LatencySubscr
     public C3ScoringSelector(IEndpointSnitch snitch, Map<String, String> parameters)
     {
         super(snitch, parameters);
+
+        this.concurrencyWeight = Double.parseDouble(parameters.getOrDefault(CONCURRENCY_WEIGHT_PROPERTY, DEFAULT_CONCURRENCY_WEIGHT_PROPERTY));
 
         MessagingService.instance().latencySubscribers.subscribe(this);
     }
@@ -69,7 +73,7 @@ public class C3ScoringSelector extends AbstractSelector implements LatencySubscr
 
         if (reservoir == null)
         {
-            ExponentiallyDecayingReservoir newReservoir = new ExponentiallyDecayingReservoir(WINDOW_SIZE, ALPHA);
+            ExponentiallyDecayingReservoir newReservoir = new ExponentiallyDecayingReservoir();
 
             reservoir = latencies.putIfAbsent(address, newReservoir);
 
@@ -82,46 +86,65 @@ public class C3ScoringSelector extends AbstractSelector implements LatencySubscr
         reservoir.update(unit.toMillis(latency));
     }
 
-    public Map<InetAddressAndPort, Double> getScores(Iterable<Replica> replicas)
+    public Map<InetAddressAndPort, Double> getScores(InetAddressAndPort address, Iterable<Replica> replicas)
     {
-        // ClusterState.instance.updateLocal();
+        ClusterState.instance.updateLocal(address);
 
         Map<InetAddressAndPort, Double> scores = new HashMap<>();
 
         for (Replica replica : replicas)
         {
-            InetAddressAndPort address = replica.endpoint();
+            InetAddressAndPort endpoint = replica.endpoint();
+            EndpointState state = ClusterState.instance.state(endpoint);
 
-            if (address.equals(FBUtilities.getLocalAddressAndPort())) continue;
-
-            EndpointState state = ClusterState.instance.state(address);
+            double score;
 
             double averageQueueSize = 0.0;
             double averageServiceTime = 0.0;
 
             if (state != null)
             {
-                ExponentiallyDecayingReservoir queueSize = (ExponentiallyDecayingReservoir) state.get(Fact.PENDING_READS);
-                ServiceTimeAggregator.ServiceTime serviceTime = (ServiceTimeAggregator.ServiceTime) state.get(Fact.SERVICE_TIME);
+                Snapshot queueSizes = ((ExponentiallyDecayingReservoir) state.get(Fact.PENDING_READS)).getSnapshot();
+                Snapshot serviceTimes = ((ServiceTimeAggregator.ServiceTime) state.get(Fact.SERVICE_TIME)).getSnapshot();
 
-                averageQueueSize = queueSize.getSnapshot().getMedian();
-                averageServiceTime = serviceTime.getSnapshot().getMedian();
+                if (queueSizes.size() > 0)
+                {
+                    averageQueueSize = queueSizes.getMean();
+                }
+
+                if (serviceTimes.size() > 0)
+                {
+                    averageServiceTime = serviceTimes.getMean();
+                }
             }
 
-            ExponentiallyDecayingReservoir latency = latencies.get(address);
-
-            double averageLatency = 0.0;
-
-            if (latency != null)
+            if (endpoint.equals(address))
             {
-                averageLatency = latency.getSnapshot().getMedian();
+                // This is the local endpoint
+                double estimatedQueueSize = 1 + averageQueueSize;
+                double cubicQueueSize = estimatedQueueSize * estimatedQueueSize * estimatedQueueSize;
+
+                score = averageServiceTime * cubicQueueSize;
+            }
+            else
+            {
+                // This is a remote endpoint
+                ExponentiallyDecayingReservoir latency = latencies.get(endpoint);
+
+                double averageLatency = 0.0;
+
+                if (latency != null)
+                {
+                    averageLatency = latency.getSnapshot().getMean();
+                }
+
+                double estimatedQueueSize = 1 + outstanding.get(endpoint) * concurrencyWeight + averageQueueSize;
+                double cubicQueueSize = estimatedQueueSize * estimatedQueueSize * estimatedQueueSize;
+
+                score = averageLatency - averageServiceTime + averageServiceTime * cubicQueueSize;
             }
 
-            double estimatedQueueSize = 1 + outstanding.get(address) * 2 + averageQueueSize;
-            double cubicQueueSize = estimatedQueueSize * estimatedQueueSize * estimatedQueueSize;
-            double score = averageLatency - averageServiceTime + averageServiceTime * cubicQueueSize;
-
-            scores.put(address, score);
+            scores.put(endpoint, score);
         }
 
         return scores;
@@ -130,14 +153,31 @@ public class C3ScoringSelector extends AbstractSelector implements LatencySubscr
     @Override
     public <C extends ReplicaCollection<? extends C>> C sortedByProximity(InetAddressAndPort address, C unsortedAddress, ReadOperation<SinglePartitionReadCommand> operation)
     {
-        Map<InetAddressAndPort, Double> scores = getScores(unsortedAddress);
+        Map<InetAddressAndPort, Double> scores = getScores(address, unsortedAddress);
 
-        C sortedAddress = super.sortedByProximity(address, unsortedAddress);
+        C sortedAddress = unsortedAddress.sorted((r1, r2) -> compareEndpoints(address, r1, r2, scores));
 
-        InetAddressAndPort chosen = sortedAddress.get(0).endpoint();
-        outstanding.incrementAndGet(chosen);
+        InetAddressAndPort first = sortedAddress.get(0).endpoint();
+
+        if (!first.equals(address))
+        {
+            outstanding.incrementAndGet(first);
+        }
 
         return sortedAddress;
+    }
+
+    public int compareEndpoints(InetAddressAndPort target, Replica r1, Replica r2, Map<InetAddressAndPort, Double> scores)
+    {
+        Double score1 = scores.getOrDefault(r1.endpoint(), 0.0);
+        Double score2 = scores.getOrDefault(r2.endpoint(), 0.0);
+
+        if (score1.equals(score2))
+        {
+            return snitch.compareEndpoints(target, r1, r2);
+        }
+
+        return score1.compareTo(score2);
     }
 
     @Override

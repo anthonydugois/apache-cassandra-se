@@ -55,13 +55,16 @@ public class ClusterState
         return state;
     }
 
-    public void updateLocal()
+    public void updateLocal(InetAddressAndPort address)
     {
-        InetAddressAndPort address = FBUtilities.getLocalAddressAndPort();
         StateFeedback feedback = new StateFeedback();
-
         feedback.put(DatabaseDescriptor.getStateFeedback());
 
         state(address).add(feedback);
+    }
+
+    public void updateLocal()
+    {
+        updateLocal(FBUtilities.getLocalAddressAndPort());
     }
 }
