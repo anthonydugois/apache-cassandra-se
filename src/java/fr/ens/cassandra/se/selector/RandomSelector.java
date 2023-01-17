@@ -60,8 +60,6 @@ public class RandomSelector extends AbstractSelector
             return compareEndpoints(address, r1, r2);
         });
 
-        logger.info("Chosen replica for key {} is {}; it should be equal to {}", operation.key(), sortedAddress.get(0), replica);
-
         return sortedAddress;
     }
 
