@@ -483,8 +483,6 @@ public class CassandraDaemon
         if (DatabaseDescriptor.useAdvancedScheduling())
         {
             logger.info("Advanced scheduling mode successfully started");
-            logger.info("Replica selector: " + DatabaseDescriptor.getEndpointSnitch().getClass().getName());
-            logger.info("Local read queue: " + DatabaseDescriptor.getReadQueue().getClass().getName());
         }
 
         completeSetup();

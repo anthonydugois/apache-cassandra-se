@@ -86,6 +86,8 @@ public class DynamicSnitchingSelector extends AbstractSelector implements Latenc
 
         ScheduledExecutors.scheduledTasks.scheduleWithFixedDelay(this::updateScores, updateInterval, updateInterval, TimeUnit.MILLISECONDS);
         ScheduledExecutors.scheduledTasks.scheduleWithFixedDelay(this::resetSamples, resetInterval, resetInterval, TimeUnit.MILLISECONDS);
+
+        logger.info("Using {} with parameters {}", getClass().getName(), parameters);
     }
 
     public int getUpdateInterval()

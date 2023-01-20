@@ -54,7 +54,11 @@ public class RandomMultilevelReadQueue extends AbstractReadQueue<Runnable>
     private static final String LEVELS_PROPERTY = "levels";
     private static final String DEFAULT_LEVELS_PROPERTY = "10";
 
+    private static final String FACTOR_PROPERTY = "factor";
+    private static final String DEFAULT_FACTOR_PROPERTY = "2";
+
     private final int levels;
+    private final int factor;
 
     private final List<ConcurrentLinkedQueue<Runnable>> queues;
 
@@ -67,6 +71,7 @@ public class RandomMultilevelReadQueue extends AbstractReadQueue<Runnable>
         super(parameters);
 
         this.levels = Integer.parseInt(parameters.getOrDefault(LEVELS_PROPERTY, DEFAULT_LEVELS_PROPERTY));
+        this.factor = Integer.parseInt(parameters.getOrDefault(FACTOR_PROPERTY, DEFAULT_FACTOR_PROPERTY));
 
         this.queues = Lists.newArrayListWithCapacity(this.levels);
         this.weights = Lists.newArrayListWithCapacity(this.levels);
@@ -75,7 +80,7 @@ public class RandomMultilevelReadQueue extends AbstractReadQueue<Runnable>
 
         for (int i = 0; i < this.levels; ++i)
         {
-            int weight = (int) Math.pow(2, this.levels - i);
+            int weight = (int) Math.pow(this.factor, this.levels - i);
 
             queues.add(Queues.newConcurrentLinkedQueue());
             weights.add(weight);
@@ -84,6 +89,8 @@ public class RandomMultilevelReadQueue extends AbstractReadQueue<Runnable>
         }
 
         this.totalWeight = totalWeight;
+
+        logger.info("Using {} with parameters {}", getClass().getName(), parameters);
     }
 
     @Override
@@ -115,6 +122,8 @@ public class RandomMultilevelReadQueue extends AbstractReadQueue<Runnable>
 
                 // Make sure the priority value does fit in the queue.
                 index = Math.min(levels - 1, Math.max(0, index));
+
+                logger.debug("Enqueuing key {} in queue {}", op.key(), index);
             }
         }
 
@@ -140,6 +149,8 @@ public class RandomMultilevelReadQueue extends AbstractReadQueue<Runnable>
 
                     if (runnable != null)
                     {
+                        logger.debug("Dequeuing from queue {}", i);
+
                         return runnable;
                     }
                 }

@@ -51,6 +51,8 @@ public class PopularityAwarePrimarySelector extends AbstractSelector
         super(snitch, parameters);
 
         this.threshold = Double.parseDouble(parameters.getOrDefault(THRESHOLD_PROPERTY, DEFAULT_THRESHOLD_PROPERTY));
+
+        logger.info("Using {} with parameters {}", getClass().getName(), parameters);
     }
 
     @Override
@@ -98,6 +100,8 @@ public class PopularityAwarePrimarySelector extends AbstractSelector
 
             // The corresponding operation should have higher priority.
             operation.add(Info.PRIORITY, 0);
+
+            logger.debug("Key {} is popular; directing to {}", operation.key(), sortedAddress.get(0));
         }
         else
         {
@@ -107,6 +111,8 @@ public class PopularityAwarePrimarySelector extends AbstractSelector
 
             // The corresponding operation has lower priority.
             operation.add(Info.PRIORITY, 1);
+
+            logger.debug("Key {} is not popular; directing to {}", operation.key(), sortedAddress.get(0));
         }
 
         return sortedAddress;

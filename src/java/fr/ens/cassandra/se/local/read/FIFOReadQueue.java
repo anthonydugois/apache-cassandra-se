@@ -35,6 +35,8 @@ public class FIFOReadQueue extends AbstractReadQueue<Runnable>
     public FIFOReadQueue(Map<String, String> parameters)
     {
         super(parameters);
+
+        logger.info("Using {} with parameters {}", getClass().getName(), parameters);
     }
 
     @Override

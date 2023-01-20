@@ -46,6 +46,8 @@ public class PriorityDynamicSnitchingSelector extends DynamicSnitchingSelector
         super(snitch, parameters);
 
         this.threshold = Integer.parseInt(parameters.getOrDefault(THRESHOLD_PROPERTY, DEFAULT_THRESHOLD_PROPERTY));
+
+        logger.info("Using {} with parameters {}", getClass().getName(), parameters);
     }
 
     @Override
