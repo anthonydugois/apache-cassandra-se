@@ -121,4 +121,5 @@ appender reference in the root level section below.
   </root>
 
   <logger name="org.apache.cassandra" level="DEBUG"/>
+  <logger name="fr.ens.cassandra.se" level="DEBUG"/>
 </configuration>

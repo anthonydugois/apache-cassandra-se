@@ -62,15 +62,21 @@ public class PriorityDynamicSnitchingSelector extends DynamicSnitchingSelector
             if (size <= threshold)
             {
                 operation.add(Info.PRIORITY, 0);
+
+                logger.debug("Adding priority {} to key {} of size {}", 0, operation.key(), size);
             }
             else
             {
                 operation.add(Info.PRIORITY, 1);
+
+                logger.debug("Adding priority {} to key {} of size {}", 1, operation.key(), size);
             }
         }
         else
         {
             operation.add(Info.PRIORITY, 0);
+
+            logger.debug("Adding default priority to key {}", operation.key());
         }
 
         return super.sortedByProximity(address, unsortedAddress);

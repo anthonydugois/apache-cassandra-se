@@ -91,6 +91,7 @@ public class RandomMultilevelReadQueue extends AbstractReadQueue<Runnable>
         this.totalWeight = totalWeight;
 
         logger.info("Using {} with parameters {}", getClass().getName(), parameters);
+        logger.info("Using {} with weights {}", getClass().getName(), weights);
     }
 
     @Override
@@ -137,23 +138,26 @@ public class RandomMultilevelReadQueue extends AbstractReadQueue<Runnable>
         {
             int choice = ThreadLocalRandom.current().nextInt(totalWeight);
 
+            int i;
             int acc = 0;
 
-            for (int i = 0; i < levels; ++i)
+            for (i = 0; i < levels; ++i)
             {
                 acc += weights.get(i);
 
                 if (acc > choice)
                 {
-                    Runnable runnable = queues.get(i).poll();
-
-                    if (runnable != null)
-                    {
-                        logger.debug("Dequeuing from queue {}", i);
-
-                        return runnable;
-                    }
+                    break;
                 }
+            }
+
+            Runnable runnable = queues.get(i).poll();
+
+            if (runnable != null)
+            {
+                logger.debug("Dequeuing from queue {}", i);
+
+                return runnable;
             }
         }
     }
@@ -165,21 +169,24 @@ public class RandomMultilevelReadQueue extends AbstractReadQueue<Runnable>
         {
             int choice = ThreadLocalRandom.current().nextInt(totalWeight);
 
+            int i;
             int acc = 0;
 
-            for (int i = 0; i < levels; ++i)
+            for (i = 0; i < levels; ++i)
             {
                 acc += weights.get(i);
 
                 if (acc > choice)
                 {
-                    Runnable runnable = queues.get(i).peek();
-
-                    if (runnable != null)
-                    {
-                        return runnable;
-                    }
+                    break;
                 }
+            }
+
+            Runnable runnable = queues.get(i).peek();
+
+            if (runnable != null)
+            {
+                return runnable;
             }
         }
     }

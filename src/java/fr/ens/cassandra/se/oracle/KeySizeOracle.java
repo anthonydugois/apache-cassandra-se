@@ -20,6 +20,11 @@ package fr.ens.cassandra.se.oracle;
 
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import fr.ens.cassandra.se.local.read.RandomMultilevelReadQueue;
+
 /**
  * This oracle infers key size from a partition key that has the following form: {size}_{id}, where {size} corresponds
  * to the number of bytes of the associated value, and {id} is a unique identifier.
@@ -33,9 +38,13 @@ import java.util.Map;
  */
 public class KeySizeOracle extends AbstractOracle<String, Integer>
 {
+    private static final Logger logger = LoggerFactory.getLogger(KeySizeOracle.class);
+
     public KeySizeOracle(Map<String, String> parameters)
     {
         super(parameters);
+
+        logger.info("Using {} with parameters {}", getClass().getName(), parameters);
     }
 
     @Override
