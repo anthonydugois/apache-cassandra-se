@@ -101,7 +101,7 @@ public class PopularityAwarePrimarySelector extends AbstractSelector
             // The corresponding operation should have higher priority.
             operation.add(Info.PRIORITY, 0);
 
-            logger.debug("Key {} is popular", operation.key());
+            // logger.debug("Key {} is popular", operation.key());
         }
         else
         {
@@ -112,10 +112,10 @@ public class PopularityAwarePrimarySelector extends AbstractSelector
             // The corresponding operation has lower priority.
             operation.add(Info.PRIORITY, 1);
 
-            logger.debug("Key {} is not popular", operation.key());
+            // logger.debug("Key {} is not popular", operation.key());
         }
 
-        logger.debug("Directing {} to {}", operation.key(), sortedAddress.get(0));
+        // logger.debug("Directing {} to {}", operation.key(), sortedAddress.get(0));
 
         return sortedAddress;
     }

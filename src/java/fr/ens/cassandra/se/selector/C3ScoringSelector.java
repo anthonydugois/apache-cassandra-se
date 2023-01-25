@@ -35,6 +35,7 @@ import fr.ens.cassandra.se.state.ClusterState;
 import fr.ens.cassandra.se.state.EndpointState;
 import fr.ens.cassandra.se.state.facts.Fact;
 import fr.ens.cassandra.se.state.facts.impl.ServiceTimeAggregator;
+import org.apache.cassandra.concurrent.ScheduledExecutors;
 import org.apache.cassandra.db.SinglePartitionReadCommand;
 import org.apache.cassandra.locator.IEndpointSnitch;
 import org.apache.cassandra.locator.InetAddressAndPort;
@@ -47,11 +48,20 @@ public class C3ScoringSelector extends AbstractSelector implements LatencySubscr
 {
     private static final Logger logger = LoggerFactory.getLogger(C3ScoringSelector.class);
 
+    private static final String UPDATE_INTERVAL_PROPERTY = "update_interval";
+    private static final String DEFAULT_UPDATE_INTERVAL_PROPERTY = "100";
+
+    private final int updateInterval;
+
     private static final String CONCURRENCY_WEIGHT_PROPERTY = "concurrency_weight";
     private static final String DEFAULT_CONCURRENCY_WEIGHT_PROPERTY = "1.0";
 
     private final double concurrencyWeight;
 
+    private static final double ALPHA = 0.75;
+    private static final int WINDOW_SIZE = 100;
+
+    private volatile Map<InetAddressAndPort, Double> scores = new HashMap<>();
     private ConcurrentMap<InetAddressAndPort, ExponentiallyDecayingReservoir> latencies = new ConcurrentHashMap<>();
     private AtomicLongMap<InetAddressAndPort> outstanding = AtomicLongMap.create();
 
@@ -59,9 +69,61 @@ public class C3ScoringSelector extends AbstractSelector implements LatencySubscr
     {
         super(snitch, parameters);
 
+        this.updateInterval = Integer.parseInt(parameters.getOrDefault(UPDATE_INTERVAL_PROPERTY, DEFAULT_UPDATE_INTERVAL_PROPERTY));
         this.concurrencyWeight = Double.parseDouble(parameters.getOrDefault(CONCURRENCY_WEIGHT_PROPERTY, DEFAULT_CONCURRENCY_WEIGHT_PROPERTY));
 
+        ScheduledExecutors.scheduledTasks.scheduleWithFixedDelay(this::updateScores, updateInterval, updateInterval, TimeUnit.MILLISECONDS);
+
         MessagingService.instance().latencySubscribers.subscribe(this);
+
+        logger.info("Using {} with parameters {}", getClass().getName(), parameters);
+    }
+
+    private void updateScores()
+    {
+        ClusterState.instance.updateLocal();
+
+        int size = latencies.size();
+
+        Map<InetAddressAndPort, Snapshot> latencySnapshots = new HashMap<>(size);
+        Map<InetAddressAndPort, Snapshot> queueSizeSnapshots = new HashMap<>(size);
+        Map<InetAddressAndPort, Snapshot> serviceTimeSnapshots = new HashMap<>(size);
+
+        for (InetAddressAndPort endpoint : latencies.keySet())
+        {
+            EndpointState state = ClusterState.instance.state(endpoint);
+
+            if (state != null)
+            {
+                Snapshot latencySnapshot = latencies.get(endpoint).getSnapshot();
+                Snapshot queueSizeSnapshot = ((ExponentiallyDecayingReservoir) state.get(Fact.PENDING_READS)).getSnapshot();
+                Snapshot serviceTimeSnapshot = ((ServiceTimeAggregator.ServiceTime) state.get(Fact.SERVICE_TIME)).getSnapshot();
+
+                latencySnapshots.put(endpoint, latencySnapshot);
+                queueSizeSnapshots.put(endpoint, queueSizeSnapshot);
+                serviceTimeSnapshots.put(endpoint, serviceTimeSnapshot);
+            }
+        }
+
+        Map<InetAddressAndPort, Double> newScores = new HashMap<>();
+
+        for (InetAddressAndPort endpoint : latencySnapshots.keySet())
+        {
+            long pending = Math.max(0, outstanding.get(endpoint));
+
+            double averageLatency = latencySnapshots.get(endpoint).getMedian();
+            double averageQueueSize = queueSizeSnapshots.get(endpoint).getMedian();
+            double averageServiceTime = serviceTimeSnapshots.get(endpoint).getMedian();
+
+            double estimatedQueueSize = 1 + pending * concurrencyWeight + averageQueueSize;
+            double cubicQueueSize = estimatedQueueSize * estimatedQueueSize * estimatedQueueSize;
+
+            double score = averageLatency - averageServiceTime + averageServiceTime * cubicQueueSize;
+
+            newScores.put(endpoint, score);
+        }
+
+        scores = newScores;
     }
 
     @Override
@@ -73,7 +135,7 @@ public class C3ScoringSelector extends AbstractSelector implements LatencySubscr
 
         if (reservoir == null)
         {
-            ExponentiallyDecayingReservoir newReservoir = new ExponentiallyDecayingReservoir();
+            ExponentiallyDecayingReservoir newReservoir = new ExponentiallyDecayingReservoir(WINDOW_SIZE, ALPHA);
 
             reservoir = latencies.putIfAbsent(address, newReservoir);
 
@@ -86,83 +148,16 @@ public class C3ScoringSelector extends AbstractSelector implements LatencySubscr
         reservoir.update(unit.toMillis(latency));
     }
 
-    public Map<InetAddressAndPort, Double> getScores(InetAddressAndPort address, Iterable<Replica> replicas)
-    {
-        ClusterState.instance.updateLocal(address);
-
-        Map<InetAddressAndPort, Double> scores = new HashMap<>();
-
-        for (Replica replica : replicas)
-        {
-            InetAddressAndPort endpoint = replica.endpoint();
-            EndpointState state = ClusterState.instance.state(endpoint);
-
-            double score;
-
-            double averageQueueSize = 0.0;
-            double averageServiceTime = 0.0;
-
-            if (state != null)
-            {
-                Snapshot queueSizes = ((ExponentiallyDecayingReservoir) state.get(Fact.PENDING_READS)).getSnapshot();
-                Snapshot serviceTimes = ((ServiceTimeAggregator.ServiceTime) state.get(Fact.SERVICE_TIME)).getSnapshot();
-
-                if (queueSizes.size() > 0)
-                {
-                    averageQueueSize = queueSizes.getMean();
-                }
-
-                if (serviceTimes.size() > 0)
-                {
-                    averageServiceTime = serviceTimes.getMean();
-                }
-            }
-
-            if (endpoint.equals(address))
-            {
-                // This is the local endpoint
-                double estimatedQueueSize = 1 + averageQueueSize;
-                double cubicQueueSize = estimatedQueueSize * estimatedQueueSize * estimatedQueueSize;
-
-                score = averageServiceTime * cubicQueueSize;
-            }
-            else
-            {
-                // This is a remote endpoint
-                ExponentiallyDecayingReservoir latency = latencies.get(endpoint);
-
-                double averageLatency = 0.0;
-
-                if (latency != null)
-                {
-                    averageLatency = latency.getSnapshot().getMean();
-                }
-
-                double estimatedQueueSize = 1 + outstanding.get(endpoint) * concurrencyWeight + averageQueueSize;
-                double cubicQueueSize = estimatedQueueSize * estimatedQueueSize * estimatedQueueSize;
-
-                score = averageLatency - averageServiceTime + averageServiceTime * cubicQueueSize;
-            }
-
-            scores.put(endpoint, score);
-        }
-
-        return scores;
-    }
-
     @Override
     public <C extends ReplicaCollection<? extends C>> C sortedByProximity(InetAddressAndPort address, C unsortedAddress, ReadOperation<SinglePartitionReadCommand> operation)
     {
-        Map<InetAddressAndPort, Double> scores = getScores(address, unsortedAddress);
+        Map<InetAddressAndPort, Double> scores = this.scores;
 
         C sortedAddress = unsortedAddress.sorted((r1, r2) -> compareEndpoints(address, r1, r2, scores));
 
-        InetAddressAndPort first = sortedAddress.get(0).endpoint();
+        outstanding.incrementAndGet(sortedAddress.get(0).endpoint());
 
-        if (!first.equals(address))
-        {
-            outstanding.incrementAndGet(first);
-        }
+        // logger.debug("Directing {} to {}", operation.key(), sortedAddress.get(0));
 
         return sortedAddress;
     }

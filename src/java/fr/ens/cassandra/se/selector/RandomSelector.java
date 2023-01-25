@@ -62,7 +62,7 @@ public class RandomSelector extends AbstractSelector
             return compareEndpoints(address, r1, r2);
         });
 
-        logger.debug("Directing {} to {}", operation.key(), sortedAddress.get(0));
+        // logger.debug("Directing {} to {}", operation.key(), sortedAddress.get(0));
 
         return sortedAddress;
     }

@@ -124,7 +124,7 @@ public class RandomMultilevelReadQueue extends AbstractReadQueue<Runnable>
                 // Make sure the priority value does fit in the queue.
                 index = Math.min(levels - 1, Math.max(0, index));
 
-                logger.debug("Enqueuing key {} in queue {}", op.key(), index);
+                // logger.debug("Enqueuing key {} in queue {}", op.key(), index);
             }
         }
 
@@ -155,7 +155,7 @@ public class RandomMultilevelReadQueue extends AbstractReadQueue<Runnable>
 
             if (runnable != null)
             {
-                logger.debug("Dequeuing from queue {}", i);
+                // logger.debug("Dequeuing from queue {}", i);
 
                 return runnable;
             }

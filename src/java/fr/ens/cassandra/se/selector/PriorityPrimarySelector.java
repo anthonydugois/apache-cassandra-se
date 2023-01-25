@@ -63,25 +63,25 @@ public class PriorityPrimarySelector extends PrimarySelector
             {
                 operation.add(Info.PRIORITY, 0);
 
-                logger.debug("Adding priority {} to key {} of size {}", 0, operation.key(), size);
+                // logger.debug("Adding priority {} to key {} of size {}", 0, operation.key(), size);
             }
             else
             {
                 operation.add(Info.PRIORITY, 1);
 
-                logger.debug("Adding priority {} to key {} of size {}", 1, operation.key(), size);
+                // logger.debug("Adding priority {} to key {} of size {}", 1, operation.key(), size);
             }
         }
         else
         {
             operation.add(Info.PRIORITY, 0);
 
-            logger.debug("Adding default priority to key {}", operation.key());
+            // logger.debug("Adding default priority to key {}", operation.key());
         }
 
         C sortedAddress = super.sortedByProximity(address, unsortedAddress);
 
-        logger.debug("Directing {} to {}", operation.key(), sortedAddress.get(0));
+        // logger.debug("Directing {} to {}", operation.key(), sortedAddress.get(0));
 
         return sortedAddress;
     }

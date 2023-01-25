@@ -37,11 +37,15 @@ public class ServiceTimeAggregator implements FactAggregator<ServiceTimeAggregat
     public ServiceTime apply(ServiceTime current, Long value, StateFeedback feedback)
     {
         current.update(value, feedback.timestamp());
+
         return current;
     }
 
     public static class ServiceTime
     {
+        private static final double ALPHA = 0.75;
+        private static final int WINDOW_SIZE = 100;
+
         private final ExponentiallyDecayingReservoir reservoir;
 
         private long lastValue = 0;
@@ -49,7 +53,7 @@ public class ServiceTimeAggregator implements FactAggregator<ServiceTimeAggregat
 
         public ServiceTime()
         {
-            this.reservoir = new ExponentiallyDecayingReservoir();
+            this.reservoir = new ExponentiallyDecayingReservoir(WINDOW_SIZE, ALPHA);
         }
 
         public void update(long value, long timestamp)
