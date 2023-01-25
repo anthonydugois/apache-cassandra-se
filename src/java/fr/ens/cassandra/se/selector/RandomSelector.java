@@ -38,6 +38,8 @@ public class RandomSelector extends AbstractSelector
     public RandomSelector(IEndpointSnitch snitch, Map<String, String> parameters)
     {
         super(snitch, parameters);
+
+        logger.info("Using {} with parameters {}", getClass().getName(), parameters);
     }
 
     @Override
@@ -59,6 +61,8 @@ public class RandomSelector extends AbstractSelector
 
             return compareEndpoints(address, r1, r2);
         });
+
+        logger.debug("Directing {} to {}", operation.key(), sortedAddress.get(0));
 
         return sortedAddress;
     }

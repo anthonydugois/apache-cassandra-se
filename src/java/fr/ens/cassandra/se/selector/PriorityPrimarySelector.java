@@ -46,6 +46,8 @@ public class PriorityPrimarySelector extends PrimarySelector
         super(snitch, parameters);
 
         this.threshold = Integer.parseInt(parameters.getOrDefault(THRESHOLD_PROPERTY, DEFAULT_THRESHOLD_PROPERTY));
+
+        logger.info("Using {} with parameters {}", getClass().getName(), parameters);
     }
 
     @Override
@@ -60,17 +62,27 @@ public class PriorityPrimarySelector extends PrimarySelector
             if (size <= threshold)
             {
                 operation.add(Info.PRIORITY, 0);
+
+                logger.debug("Adding priority {} to key {} of size {}", 0, operation.key(), size);
             }
             else
             {
                 operation.add(Info.PRIORITY, 1);
+
+                logger.debug("Adding priority {} to key {} of size {}", 1, operation.key(), size);
             }
         }
         else
         {
             operation.add(Info.PRIORITY, 0);
+
+            logger.debug("Adding default priority to key {}", operation.key());
         }
 
-        return super.sortedByProximity(address, unsortedAddress);
+        C sortedAddress = super.sortedByProximity(address, unsortedAddress);
+
+        logger.debug("Directing {} to {}", operation.key(), sortedAddress.get(0));
+
+        return sortedAddress;
     }
 }

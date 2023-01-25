@@ -34,6 +34,8 @@ public class PrimarySelector extends AbstractSelector
     public PrimarySelector(IEndpointSnitch snitch, Map<String, String> parameters)
     {
         super(snitch, parameters);
+
+        logger.info("Using {} with parameters {}", getClass().getName(), parameters);
     }
 
     @Override

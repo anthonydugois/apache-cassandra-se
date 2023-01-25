@@ -79,6 +79,10 @@ public class PriorityDynamicSnitchingSelector extends DynamicSnitchingSelector
             logger.debug("Adding default priority to key {}", operation.key());
         }
 
-        return super.sortedByProximity(address, unsortedAddress);
+        C sortedAddress = super.sortedByProximity(address, unsortedAddress);
+
+        logger.debug("Directing {} to {}", operation.key(), sortedAddress.get(0));
+
+        return sortedAddress;
     }
 }
