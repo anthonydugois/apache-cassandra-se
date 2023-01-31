@@ -266,13 +266,13 @@ public class DatabaseDescriptor
 
         applyPartitioner();
 
-        applySnitch();
-
-        applyReadQueue();
-
+        // State feedback and oracle modules must be instantiated before
+        // replica selection and local scheduling modules to avoid null pointers
         applyStateFeedback();
-
         applyOracles();
+
+        applySnitch();
+        applyReadQueue();
 
         applyEncryptionContext();
     }
@@ -406,13 +406,13 @@ public class DatabaseDescriptor
 
         applyAddressConfig();
 
-        applySnitch();
-
-        applyReadQueue();
-
+        // State feedback and oracle modules must be instantiated before
+        // replica selection and local scheduling modules to avoid null pointers
         applyStateFeedback();
-
         applyOracles();
+
+        applySnitch();
+        applyReadQueue();
 
         applyTokensConfig();
 
